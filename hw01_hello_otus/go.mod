@@ -1,4 +1,4 @@
-module github.com/Lamerkid/hw01_hello_otus
+module github.com/lamerkid/hw01_hello_otus
 
 go 1.23
 
