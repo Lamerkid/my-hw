@@ -13,12 +13,12 @@ func Unpack(str string) (string, error) {
 	runesArray := []rune(str)
 	for i := 0; i < len(runesArray); i++ {
 
-		if i+1 < len(runesArray) && string(runesArray[i+1]) == "0" {
-			continue
-		}
-
 		if i+1 < len(runesArray) && string(runesArray[i]) >= "0" && string(runesArray[i]) <= "9" && string(runesArray[i+1]) >= "0" && string(runesArray[i+1]) <= "9" {
 			return "", ErrInvalidString
+		}
+
+		if i+1 < len(runesArray) && string(runesArray[i+1]) == "0" {
+			continue
 		}
 
 		n, err := strconv.Atoi(string(runesArray[i]))
