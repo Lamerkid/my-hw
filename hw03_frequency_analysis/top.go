@@ -1,6 +1,7 @@
 package hw03frequencyanalysis
 
 import (
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -9,13 +10,28 @@ func Top10(str string) []string {
 	if len(str) == 0 {
 		return nil
 	}
+	// Найти все слова (включая знаки препинания внутри слов)
+	re := regexp.MustCompile(`[\wа-яА-Я.,!?;:-]+`)
+	wordsSlice := re.FindAllString(str, -1)
 
-	wordsSlice := strings.Fields(str)
+	// Начало или конец строки НЕ слова
+	nonWords := regexp.MustCompile(`^[^\wа-яА-Я-]*|[^\wа-яА-Я-]*$`)
+
+	for i := 0; i < len(wordsSlice); i++ {
+		// Удаление всего подходящего под nonWords и приведение строки в нижний регистр
+		wordsSlice[i] = nonWords.ReplaceAllString(wordsSlice[i], "")
+		wordsSlice[i] = strings.ToLower(wordsSlice[i])
+	}
+
 	wordsMap := map[string]int{}
 
 	for _, word := range wordsSlice {
-		if val, ok := wordsMap[word]; ok {
-			wordsMap[word] = val + 1
+		// "-" не является словом - не записываем
+		if word == "-" {
+			continue
+		}
+		if count, ok := wordsMap[word]; ok {
+			wordsMap[word] = count + 1
 			continue
 		}
 		wordsMap[word] = 1
@@ -27,10 +43,10 @@ func Top10(str string) []string {
 	}
 
 	records := make([]record, 0, len(wordsSlice))
-	for k, v := range wordsMap {
-		records = append(records, record{k, v})
+	for w, c := range wordsMap {
+		records = append(records, record{w, c})
 	}
-
+	// Сортируем по кол-ву, далее по алфавиту
 	sort.Slice(records, func(i, j int) bool {
 		if records[i].Count == records[j].Count {
 			return records[i].Word < records[j].Word
