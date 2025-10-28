@@ -56,6 +56,9 @@ func Top10(str string) []string {
 
 	var output []string
 	for i := 0; i < 10; i++ {
+		if i == len(records) {
+			break
+		}
 		output = append(output, records[i].Word)
 	}
 

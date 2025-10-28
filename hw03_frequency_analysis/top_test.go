@@ -62,6 +62,8 @@ From his low tract, and look another way:
 So thou, thyself outgoing in thy noon
 Unlooked on diest unless thou get a son.`
 
+var text3 = `менее, 10 слов.`
+
 func TestTop10(t *testing.T) {
 	t.Run("no words in empty string", func(t *testing.T) {
 		require.Len(t, Top10(""), 0)
@@ -125,6 +127,21 @@ func TestTop10(t *testing.T) {
 				"on",        // 2
 			}
 			require.Equal(t, expected, Top10(text2))
+		}
+		if taskWithAsteriskIsCompleted {
+			expected := []string{
+				"10",
+				"менее",
+				"слов",
+			}
+			require.Equal(t, expected, Top10(text3))
+		} else {
+			expected := []string{
+				"10",
+				"менее,",
+				"слов.",
+			}
+			require.Equal(t, expected, Top10(text3))
 		}
 	})
 }
