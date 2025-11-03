@@ -10,26 +10,30 @@ func Top10(str string) []string {
 	if len(str) == 0 {
 		return nil
 	}
-	// Найти все слова (включая знаки препинания внутри слов)
-	re := regexp.MustCompile(`[\wа-яА-Я.,!?;:-]+`)
-	wordsSlice := re.FindAllString(str, -1)
+	wordsSlice := strings.Fields(str)
 
-	// Начало или конец строки НЕ слова
-	nonWords := regexp.MustCompile(`^[^\wа-яА-Я-]*|[^\wа-яА-Я-]*$`)
+	// От начала или конца строки есть пунктуация
+	trimPunctuation := regexp.MustCompile(`^\p{P}*|\p{P}*$`)
 
-	for i := 0; i < len(wordsSlice); i++ {
-		// Удаление всего подходящего под nonWords и приведение строки в нижний регистр
-		wordsSlice[i] = nonWords.ReplaceAllString(wordsSlice[i], "")
-		wordsSlice[i] = strings.ToLower(wordsSlice[i])
+	var cleanedWords []string
+	matchWord := regexp.MustCompile(`\p{P}`)
+	for _, word := range wordsSlice {
+		// Не записываем пунктуации длиной меньше чем 2
+		match := matchWord.MatchString(word)
+		if len(word) < 2 && match {
+			continue
+		}
+		cleaned := strings.ToLower(trimPunctuation.ReplaceAllString(word, ""))
+		// Если слово полностью стерлось, значит оно состоит из пунктуаций, записываем его в неизменном виде
+		if len(cleaned) == 0 {
+			cleanedWords = append(cleanedWords, word)
+		} else {
+			cleanedWords = append(cleanedWords, cleaned)
+		}
 	}
 
 	wordsMap := map[string]int{}
-
-	for _, word := range wordsSlice {
-		// "-" не является словом - не записываем
-		if word == "-" {
-			continue
-		}
+	for _, word := range cleanedWords {
 		if count, ok := wordsMap[word]; ok {
 			wordsMap[word] = count + 1
 			continue
@@ -42,7 +46,7 @@ func Top10(str string) []string {
 		Count int
 	}
 
-	records := make([]record, 0, len(wordsSlice))
+	records := make([]record, 0, len(cleanedWords))
 	for w, c := range wordsMap {
 		records = append(records, record{w, c})
 	}
