@@ -7,7 +7,7 @@ import (
 )
 
 // Change to true if needed.
-var taskWithAsteriskIsCompleted = false
+var taskWithAsteriskIsCompleted = true
 
 var text = `Как видите, он  спускается  по  лестнице  вслед  за  своим
 	другом   Кристофером   Робином,   головой   вниз,  пересчитывая
@@ -43,6 +43,27 @@ var text = `Как видите, он  спускается  по  лестни�
 	посидеть у огня и послушать какую-нибудь интересную сказку.
 		В этот вечер...`
 
+var text2 = `- Shakespeare - Sonnet VII
+-	------- abc...cba
+-	------- abc...cba
+-	------- abccba
+Lo! in the orient when the gracious light
+Lifts up his burning head, each under eye
+Doth homage to his new-appearing sight,
+Serving with looks his sacred majesty;
+And having climbed the steep-up heavenly hill,
+Resembling strong youth in his middle age,
+Yet mortal looks adore his beauty still,
+Attending on his golden pilgrimage:
+But when from highmost pitch, with weary car,
+Like feeble age, he reeleth from the day,
+The eyes, 'fore duteous, now converted are
+From his low tract, and look another way:
+So thou, thyself outgoing in thy noon
+Unlooked on diest unless thou get a son.`
+
+var text3 = `в в в менее, 10 слов. 🙃.`
+
 func TestTop10(t *testing.T) {
 	t.Run("no words in empty string", func(t *testing.T) {
 		require.Len(t, Top10(""), 0)
@@ -77,6 +98,54 @@ func TestTop10(t *testing.T) {
 				"то",        // 4
 			}
 			require.Equal(t, expected, Top10(text))
+		}
+		if taskWithAsteriskIsCompleted {
+			expected := []string{
+				"his",       // 7
+				"the",       // 5
+				"-------",   // 3
+				"from",      // 3
+				"in",        // 3
+				"abc...cba", // 2
+				"age",       // 2
+				"and",       // 2
+				"looks",     // 2
+				"on",        // 2
+			}
+			require.Equal(t, expected, Top10(text2))
+		} else {
+			expected := []string{
+				"his",       // 7
+				"-",         // 5
+				"the",       // 4
+				"-------",   // 3
+				"in",        // 3
+				"abc...cba", // 2
+				"age,",      // 2
+				"from",      // 2
+				"looks",     // 2
+				"on",        // 2
+			}
+			require.Equal(t, expected, Top10(text2))
+		}
+		if taskWithAsteriskIsCompleted {
+			expected := []string{
+				"в",
+				"10",
+				"менее",
+				"слов",
+				"🙃",
+			}
+			require.Equal(t, expected, Top10(text3))
+		} else {
+			expected := []string{
+				"в",
+				"10",
+				"менее,",
+				"слов.",
+				"🙃.",
+			}
+			require.Equal(t, expected, Top10(text3))
 		}
 	})
 }
