@@ -36,7 +36,7 @@ func (l *list) Back() *ListItem {
 
 func (l *list) PushFront(v interface{}) *ListItem {
 	newListItem := &ListItem{Value: v}
-	// Инициализировать ноду, если список пустой
+	// Инициализировать ноду, если список пустой.
 	if l.firstNode == nil {
 		l.firstNode = newListItem
 		l.lastNode = newListItem
@@ -53,7 +53,7 @@ func (l *list) PushFront(v interface{}) *ListItem {
 
 func (l *list) PushBack(v interface{}) *ListItem {
 	newListItem := &ListItem{Value: v}
-	// Инициализировать ноду, если список пустой
+	// Инициализировать ноду, если список пустой.
 	if l.lastNode == nil {
 		l.lastNode = newListItem
 		l.firstNode = newListItem
@@ -69,7 +69,7 @@ func (l *list) PushBack(v interface{}) *ListItem {
 }
 
 func (l *list) Remove(i *ListItem) {
-	// При удалении последней ноды списка значения firstNode и lastNode становятся nil
+	// При удалении последней ноды списка значения firstNode и lastNode становятся nil.
 
 	// Если i - начало списка, то firstNode = следующий элемент
 	// Иначе i.prev -> i.next
@@ -80,7 +80,7 @@ func (l *list) Remove(i *ListItem) {
 	}
 
 	// Если i - конец списка, то lastNode = предыдущий элемент
-	// Иначе i.prev <- i.next
+	// иначе i.prev <- i.next
 	if i.Next == nil {
 		l.lastNode = i.Prev
 	} else {
@@ -90,14 +90,14 @@ func (l *list) Remove(i *ListItem) {
 }
 
 func (l *list) MoveToFront(i *ListItem) {
-	// Если элемент в начале, то ничего не делаем
+	// Если элемент в начале, то ничего не делаем.
 	if i.Prev == nil {
 		return
 	}
 	// i.prev -> i.next (i.next может быть nil)
 	i.Prev.Next = i.Next
 	// Если i - конец списка, то lastNode = предыдущий элемент
-	// Иначе i.prev <- i.next
+	// иначе i.prev <- i.next
 	if i.Next == nil {
 		l.lastNode = i.Prev
 	} else {
