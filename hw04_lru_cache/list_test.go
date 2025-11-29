@@ -27,6 +27,9 @@ func TestList(t *testing.T) {
 		l.Remove(middle)         // [10, 30]
 		require.Equal(t, 2, l.Len())
 
+		require.True(t, l.Front().Next == l.Back(), "2 items: First item should be connected to last")
+		require.True(t, l.Back().Prev == l.Front(), "2 items: Last item should be connected to first")
+
 		for i, v := range [...]int{40, 50, 60, 70, 80} {
 			if i%2 == 0 {
 				l.PushFront(v)
@@ -47,5 +50,39 @@ func TestList(t *testing.T) {
 			elems = append(elems, i.Value.(int))
 		}
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
+	})
+
+	t.Run("check items", func(t *testing.T) {
+		l := NewList()
+
+		l.PushBack(`world`) // [world]
+		l.PushFront("🙃")    // [🙃, world]
+		l.PushFront(0x123)  // [291, 🙃, world]
+		require.Equal(t, 3, l.Len())
+
+		l.MoveToFront(l.Back())  // [world, 291, 🙃]
+		l.MoveToFront(l.Front()) // [world, 291, 🙃]
+
+		require.True(t, l.Front().Prev == nil, "First item should have Prev = nil")
+		require.True(t, l.Front().Next == l.Back().Prev, "Middle item should be accesed from first and last")
+		require.True(t, l.Back().Next == nil, "Last item should have Next = nil")
+
+		elems := make([]interface{}, 0, l.Len())
+		for i := l.Front(); i != nil; i = i.Next {
+			elems = append(elems, i.Value)
+		}
+		require.Equal(t, []interface{}{`world`, 0x123, "🙃"}, elems)
+
+		l.Remove(l.Back()) // [world, 291]
+
+		require.True(t, l.Front().Next == l.Back(), "2 items: First item should be connected to last")
+		require.True(t, l.Back().Prev == l.Front(), "2 items: Last item should be connected to first")
+
+		l.Remove(l.Front()) // [291]
+		l.Remove(l.Front()) // []
+
+		require.True(t, l.Front() == nil, "No items should be in the list")
+		require.True(t, l.Back() == nil, "No items should be in the list")
+		require.Equal(t, 0, l.Len())
 	})
 }
