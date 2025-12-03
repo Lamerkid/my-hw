@@ -67,4 +67,70 @@ func TestRun(t *testing.T) {
 		require.Equal(t, int32(tasksCount), runTasksCount, "not all tasks were completed")
 		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
 	})
+
+	t.Run("if maxErrorCount=0, than return error", func(t *testing.T) {
+		tasksCount := 5
+		tasks := make([]Task, 0, tasksCount)
+
+		for i := 0; i < tasksCount; i++ {
+			tasks = append(tasks, func() error {
+				return nil
+			})
+		}
+
+		workersCount := 5
+		maxErrorsCount := 0
+
+		err := Run(tasks, workersCount, maxErrorsCount)
+		require.Error(t, err, "Must be ErrErrorsLimitExceeded")
+	})
+
+	t.Run("taskCount < workersCount and taskCount < maxErrorCount", func(t *testing.T) {
+		tasksCount := 10
+		tasks := make([]Task, 0, tasksCount)
+
+		for i := 0; i < tasksCount; i++ {
+			err := fmt.Errorf("error from task %d", i)
+			tasks = append(tasks, func() error {
+				time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
+				return err
+			})
+		}
+
+		workersCount := 50
+		maxErrorsCount := 20
+
+		err := Run(tasks, workersCount, maxErrorsCount)
+		require.NoError(t, err)
+	})
+
+	t.Run("concurrency test", func(t *testing.T) {
+		tasksCount := 100
+
+		var runningTasks int32
+		var maxConcurrent int32
+
+		tasks := make([]Task, 0, tasksCount)
+
+		for i := 0; i < tasksCount; i++ {
+			tasks = append(tasks, func() error {
+				concurrent := atomic.AddInt32(&runningTasks, 1)
+
+				if current := atomic.LoadInt32(&maxConcurrent); concurrent > current {
+					atomic.CompareAndSwapInt32(&maxConcurrent, current, concurrent)
+				}
+
+				time.Sleep(10 * time.Millisecond)
+				atomic.AddInt32(&runningTasks, -1)
+				return nil
+			})
+		}
+
+		workersCount := 10
+		Run(tasks, workersCount, 1)
+
+		require.Eventually(t, func() bool {
+			return atomic.LoadInt32(&maxConcurrent) > 1
+		}, 1000*time.Millisecond, 10*time.Millisecond, "tasks should run concurrently")
+	})
 }
