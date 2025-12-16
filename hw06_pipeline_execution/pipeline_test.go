@@ -62,6 +62,25 @@ func TestPipeline(t *testing.T) {
 			int64(sleepPerStage)*int64(len(stages)+len(data)-1)+int64(fault))
 	})
 
+	t.Run("empty case", func(t *testing.T) {
+		in := make(Bi)
+		data := []int{}
+
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+
+		result := make([]string, 0)
+		for s := range ExecutePipeline(in, nil, stages...) {
+			result = append(result, s.(string))
+		}
+
+		require.Equal(t, []string{}, result)
+	})
+
 	t.Run("done case", func(t *testing.T) {
 		in := make(Bi)
 		done := make(Bi)
@@ -84,6 +103,41 @@ func TestPipeline(t *testing.T) {
 		result := make([]string, 0, 10)
 		start := time.Now()
 		for s := range ExecutePipeline(in, done, stages...) {
+			result = append(result, s.(string))
+		}
+		elapsed := time.Since(start)
+
+		require.Len(t, result, 0)
+		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
+	})
+
+	t.Run("done while stage working case", func(t *testing.T) {
+		longStage := []Stage{g("very long stage", func(v interface{}) interface{} {
+			for i := 0; i < 1000000000; i++ {
+				v = i
+			}
+			return v
+		})}
+		in := make(Bi)
+		done := make(Bi)
+		data := []int{1, 2, 3, 4, 5}
+
+		abortDur := sleepPerStage * 2
+		go func() {
+			<-time.After(abortDur)
+			close(done)
+		}()
+
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+
+		result := make([]string, 0, 10)
+		start := time.Now()
+		for s := range ExecutePipeline(in, done, longStage...) {
 			result = append(result, s.(string))
 		}
 		elapsed := time.Since(start)
@@ -119,6 +173,26 @@ func TestAllStageStop(t *testing.T) {
 		g("Stringifier", func(v interface{}) interface{} { return strconv.Itoa(v.(int)) }),
 	}
 
+	t.Run("empty case", func(t *testing.T) {
+		in := make(Bi)
+		data := []int{}
+
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+
+		result := make([]string, 0)
+		for s := range ExecutePipeline(in, nil, stages...) {
+			result = append(result, s.(string))
+		}
+		wg.Wait()
+
+		require.Equal(t, []string{}, result)
+	})
+
 	t.Run("done case", func(t *testing.T) {
 		in := make(Bi)
 		done := make(Bi)
@@ -145,6 +219,5 @@ func TestAllStageStop(t *testing.T) {
 		wg.Wait()
 
 		require.Len(t, result, 0)
-
 	})
 }
