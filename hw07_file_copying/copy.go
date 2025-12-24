@@ -27,7 +27,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	inFile, err := os.ReadFile(fromPath)
 	if err != nil {
 		slog.Error("error reading from file", "error", err)
-		os.Exit(1)
+		panic(err)
 	}
 
 	// respect the offset
@@ -38,7 +38,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	outFile, err := os.Create(toPath)
 	if err != nil {
 		slog.Error("error creating output file", "error", err)
-		os.Exit(1)
+		panic(err)
 	}
 	defer outFile.Close()
 
@@ -62,16 +62,15 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 			bytesToCopy = limit - bytesRead
 		}
 		bytesCopied, err := io.CopyN(outFile, inMem, bytesToCopy)
-		// EOF - write remaining
-		if err == io.EOF {
-			bytesRead += bytesCopied
+		// EOF - fill rest to progress bar
+		if errors.Is(err, io.EOF) {
 			bar.Increment(int(bytesCopied))
 			bar.Finish()
 			return nil
 		}
 		if err != nil {
 			slog.Error("error copying file", "error", err)
-			os.Exit(1)
+			panic(err)
 		}
 		bytesRead += bytesCopied
 		bar.Increment(int(bytesCopied))
