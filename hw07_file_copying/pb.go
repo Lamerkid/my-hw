@@ -1,31 +1,34 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 const length = 50
 
 type ProgressBar struct {
-	current int
-	done    bool
+	capacity int
+	current  int
+	done     bool
 }
 
-func (pb *ProgressBar) Start() {
+func (pb *ProgressBar) Start(capacity int) {
 	pb.current = 0
 	pb.done = false
-	MakeProgress(pb.current)
+	pb.capacity = capacity
+	MakeProgress(pb.current, pb.capacity)
 }
 
 func (pb *ProgressBar) Increment(amount int) {
 	pb.current += amount
-	if pb.current > 100 {
-		pb.current = 100
+	if pb.current > pb.capacity {
+		pb.current = pb.capacity
 	}
-	MakeProgress(pb.current)
+	MakeProgress(pb.current, pb.capacity)
 }
 
 func (pb *ProgressBar) Finish() {
-	pb.current = 100
-	MakeProgress(pb.current)
 	pb.done = true
 	fmt.Println()
 }
@@ -37,15 +40,16 @@ func (pb *ProgressBar) Cleanup() {
 	}
 }
 
-func MakeProgress(count int) {
-	n := count * length / 100
+func MakeProgress(count, capacity int) {
+	if capacity == 0 {
+		fmt.Printf("\r[%s] %d/%d\tbytes 100%%", strings.Repeat(" ", length), count, capacity)
+		return
+	}
 
-	fmt.Printf("\r[")
-	for i := 0; i < n; i++ {
-		fmt.Printf("#")
-	}
-	for i := 0; i < length-n; i++ {
-		fmt.Printf(" ")
-	}
-	fmt.Printf("] %d%%", count)
+	percentage := count * 100 / capacity
+	n := percentage * length / 100
+
+	bar := strings.Repeat("#", n) + strings.Repeat(" ", length-n)
+
+	fmt.Printf("\r[%s] %d/%d\tbytes %d%% ", bar, count, capacity, percentage)
 }

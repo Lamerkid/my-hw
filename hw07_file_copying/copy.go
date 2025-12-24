@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"log"
+	"log/slog"
 	"os"
-	"path/filepath"
 )
 
 var (
@@ -15,58 +14,69 @@ var (
 )
 
 func Copy(fromPath, toPath string, offset, limit int64) error {
-	bar := ProgressBar{}
-	bar.Start()
-	defer bar.Cleanup()
-
-	// check for regular file
+	// check file stats
 	stat, _ := os.Stat(fromPath)
 	if regular := stat.Mode().IsRegular(); !regular {
 		return ErrUnsupportedFile
 	}
-
-	// read from file
-	inFile, err := os.ReadFile(fromPath)
-	if err != nil {
-		log.Panic("[ERROR] error reading file: ", err)
-	}
-
-	// check for offset
-	if int64(len(inFile)) < offset {
+	if size := stat.Size(); size < offset {
 		return ErrOffsetExceedsFileSize
 	}
 
-	// make default 0 limit as infinite
-	if limit == 0 {
-		limit = -1
+	// read from source file
+	inFile, err := os.ReadFile(fromPath)
+	if err != nil {
+		slog.Error("error reading from file", "error", err)
+		os.Exit(1)
 	}
 
-	// create reader from byte[] file
+	// respect the offset
+	inFile = inFile[offset:]
 	inMem := bytes.NewReader(inFile)
 
-	// sectionReader from bytes reader
-	reader := io.NewSectionReader(inMem, offset, limit)
-
-	// make output dir
-	if err := os.MkdirAll(filepath.Dir(toPath), 0o777); err != nil {
-		log.Panic("[ERROR] error creating output dir: ", err)
-	}
-
-	// make output file
+	// create output file
 	outFile, err := os.Create(toPath)
 	if err != nil {
-		log.Panic("[ERROR] error creating output file: ", err)
+		slog.Error("error creating output file", "error", err)
+		os.Exit(1)
 	}
 	defer outFile.Close()
 
-	bar.Increment(50)
+	// init progress bar
+	bar := ProgressBar{}
+	if limit == 0 || limit > int64(len(inFile)) {
+		bar.Start(len(inFile))
+	} else {
+		bar.Start(int(limit))
+	}
+	defer bar.Cleanup()
 
-	// write to output file
-	if _, err = io.Copy(outFile, reader); err != nil {
-		log.Panic("[ERROR] error writing to output file: ", err)
+	// copy function
+	var bufSize int64 = 16
+	var bytesRead int64
+	// while limit is not exceeded
+	for limit == 0 || limit != bytesRead {
+		bytesToCopy := bufSize
+		// if limit is less then buffer
+		if limit != 0 && bytesToCopy > limit-bytesRead {
+			bytesToCopy = limit - bytesRead
+		}
+		bytesCopied, err := io.CopyN(outFile, inMem, bytesToCopy)
+		// EOF - write remaining
+		if err == io.EOF {
+			bytesRead += bytesCopied
+			bar.Increment(int(bytesCopied))
+			bar.Finish()
+			return nil
+		}
+		if err != nil {
+			slog.Error("error copying file", "error", err)
+			os.Exit(1)
+		}
+		bytesRead += bytesCopied
+		bar.Increment(int(bytesCopied))
 	}
 
-	bar.Increment(50)
 	bar.Finish()
 	return nil
 }
