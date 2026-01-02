@@ -3,10 +3,9 @@ package main
 import (
 	"bytes"
 	"errors"
-	"log/slog"
 	"os"
 	"path/filepath"
-	"regexp"
+	"strings"
 )
 
 type Environment map[string]EnvValue
@@ -25,29 +24,34 @@ var (
 // ReadDir reads a specified directory and returns map of env variables.
 // Variables represented as files where filename is name of variable, file first line is a value.
 func ReadDir(dir string) (Environment, error) {
-	env := make(Environment)
-	reg := regexp.MustCompile(`[\s||\p{P}$+<=>^|~]`)
-	emptySpaces := regexp.MustCompile(`\s`)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
 	stat, _ := os.Stat(dir)
 	if isDirectory := stat.Mode().IsDir(); !isDirectory {
 		return nil, ErrNotADirectory
 	}
 
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		slog.Error("Error reading directory", "error", err)
-		return nil, err
+	env := make(Environment)
+	if len(entries) == 0 {
+		return nil, ErrNoFilesInDirectory
 	}
 
 	for _, e := range entries {
 		stat, _ := e.Info()
+
+		if stat.Size() == 0 {
+			env[e.Name()] = EnvValue{NeedRemove: true}
+			continue
+		}
+
 		if regular := stat.Mode().IsRegular(); !regular {
 			continue
 		}
 
 		fileBytes, err := os.ReadFile(filepath.Join(dir, e.Name()))
 		if err != nil {
-			slog.Error("Error opening file", "error", err)
 			return nil, err
 		}
 
@@ -55,18 +59,20 @@ func ReadDir(dir string) (Environment, error) {
 		var word string
 		for {
 			ch, _, err := byteReader.ReadRune()
-			if err != nil || ch == '\n' || ch == 0x00 {
+			if err != nil || ch == '\n' {
+				word = strings.TrimRight(word, ` \s`)
 				break
+			}
+			if ch == 0x00 {
+				ch = '\n'
 			}
 			word += string(ch)
 		}
-
-		regWord := reg.ReplaceAllString(word, "")
-		if emptySpaces.MatchString(regWord) || regWord == "" {
-			continue
+		if word == "" {
+			env[e.Name()] = EnvValue{word, true}
+		} else {
+			env[e.Name()] = EnvValue{word, false}
 		}
-
-		env[e.Name()] = EnvValue{regWord, false}
 	}
 	return env, nil
 }
