@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 )
 
 var (
@@ -18,5 +19,19 @@ func init() {
 
 func main() {
 	flag.Parse()
-	// Place your code here.
+
+	if from == "" {
+		fmt.Println("No filepath to copy is specified. Please, use the -from flag.")
+		return
+	}
+
+	if from == "" {
+		fmt.Println("No destination filepath is specified. Please, use the -to flag.")
+		return
+	}
+
+	err := Copy(from, to, offset, limit)
+	if err != nil {
+		panic(err)
+	}
 }
