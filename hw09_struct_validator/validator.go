@@ -2,6 +2,8 @@ package hw09structvalidator
 
 import (
 	"errors"
+	"log/slog"
+	"os"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -92,7 +94,8 @@ func validateString(field reflect.Value, tagKey, tagValue string) error {
 	case "len":
 		val, err := strconv.Atoi(tagValue)
 		if err != nil {
-			return err
+			slog.Error("error converting len to int", "error", err)
+			os.Exit(1)
 		}
 		if len(field.String()) != val {
 			return ErrValidateStringLen
@@ -101,7 +104,8 @@ func validateString(field reflect.Value, tagKey, tagValue string) error {
 	case "regexp":
 		reg, err := regexp.Compile(tagValue)
 		if err != nil {
-			return err
+			slog.Error("error compiling regexp value", "error", err)
+			os.Exit(1)
 		}
 		if !reg.MatchString(field.String()) {
 			return ErrValidateStringRegexp
@@ -124,7 +128,8 @@ func validateInt(field reflect.Value, tagKey, tagValue string) error {
 	case "min":
 		val, err := strconv.Atoi(tagValue)
 		if err != nil {
-			return err
+			slog.Error("error converting min to int", "error", err)
+			os.Exit(1)
 		}
 		if int(field.Int()) < val {
 			return ErrValidateIntMin
@@ -133,7 +138,8 @@ func validateInt(field reflect.Value, tagKey, tagValue string) error {
 	case "max":
 		val, err := strconv.Atoi(tagValue)
 		if err != nil {
-			return err
+			slog.Error("error converting max to int", "error", err)
+			os.Exit(1)
 		}
 		if int(field.Int()) > val {
 			return ErrValidateIntMax
@@ -144,7 +150,8 @@ func validateInt(field reflect.Value, tagKey, tagValue string) error {
 		for _, val := range arrayVals {
 			val, err := strconv.Atoi(val)
 			if err != nil {
-				return err
+				slog.Error("error in:string to int", "error", err)
+				os.Exit(1)
 			}
 			if int(field.Int()) == val {
 				return nil
