@@ -1,3 +1,4 @@
+//go:build !bench
 // +build !bench
 
 package hw10programoptimization
@@ -35,5 +36,17 @@ func TestGetDomainStat(t *testing.T) {
 		result, err := GetDomainStat(bytes.NewBufferString(data), "unknown")
 		require.NoError(t, err)
 		require.Equal(t, DomainStat{}, result)
+	})
+
+	data = data + `
+{"Id":6,"Name":"No domain","Username":"Nodomain","Email":"domain.com@nodomain","Phone":"146-91-01","Password":"acSBF5","Address":"Russell Trail 61"}`
+
+	t.Run("do not find 'com' before @", func(t *testing.T) {
+		result, err := GetDomainStat(bytes.NewBufferString(data), "com")
+		require.NoError(t, err)
+		require.Equal(t, DomainStat{
+			"browsecat.com": 2,
+			"linktype.com":  1,
+		}, result)
 	})
 }
