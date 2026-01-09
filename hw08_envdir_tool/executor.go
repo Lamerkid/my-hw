@@ -44,6 +44,8 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 		if errors.As(err, &e) {
 			return e.ExitCode()
 		}
+		slog.Error("error executing command", "error", err)
+		return 1
 	}
 	return command.ProcessState.ExitCode()
 }
