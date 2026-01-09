@@ -2,8 +2,7 @@ package hw09structvalidator
 
 import (
 	"errors"
-	"log/slog"
-	"os"
+	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -26,14 +25,17 @@ func (v ValidationErrors) Error() string {
 }
 
 var (
-	ErrNotAStruct = errors.New("not a struct")
+	ErrNotAStruct    = errors.New("not a struct")
+	ErrConvertToInt  = errors.New("could not convert to int")
+	ErrCompileRegexp = errors.New("could not compile regexp")
 
-	ErrValidateStringLen    = errors.New("string not correct length")
-	ErrValidateStringRegexp = errors.New("string not correct regexp")
-	ErrValidateStringIn     = errors.New("string is not in array")
-	ErrValidateIntMin       = errors.New("integer less than minimum")
-	ErrValidateIntMax       = errors.New("integer more than maximum")
-	ErrValidateIntIn        = errors.New("integer is not in array")
+	ErrValidation           = errors.New("could not validate field")
+	ErrValidateStringLen    = fmt.Errorf("%w: string not correct length", ErrValidation)
+	ErrValidateStringRegexp = fmt.Errorf("%w: string not correct regexp", ErrValidation)
+	ErrValidateStringIn     = fmt.Errorf("%w: string is not in array", ErrValidation)
+	ErrValidateIntMin       = fmt.Errorf("%w: integer less than minimum", ErrValidation)
+	ErrValidateIntMax       = fmt.Errorf("%w: integer more than maximum", ErrValidation)
+	ErrValidateIntIn        = fmt.Errorf("%w: integer is not in array", ErrValidation)
 )
 
 func Validate(v interface{}) error {
@@ -59,10 +61,14 @@ func Validate(v interface{}) error {
 		for _, part := range parts {
 			err := validateStruct(value, part)
 			if err != nil {
-				errs = append(errs, ValidationError{
-					Field: fieldName,
-					Err:   err,
-				})
+				if errors.Is(err, ErrValidation) {
+					errs = append(errs, ValidationError{
+						Field: fieldName,
+						Err:   err,
+					})
+				} else {
+					return err
+				}
 			}
 		}
 	}
@@ -94,8 +100,7 @@ func validateString(field reflect.Value, tagKey, tagValue string) error {
 	case "len":
 		val, err := strconv.Atoi(tagValue)
 		if err != nil {
-			slog.Error("error converting len to int", "error", err)
-			os.Exit(1)
+			return ErrConvertToInt
 		}
 		if len(field.String()) != val {
 			return ErrValidateStringLen
@@ -104,8 +109,7 @@ func validateString(field reflect.Value, tagKey, tagValue string) error {
 	case "regexp":
 		reg, err := regexp.Compile(tagValue)
 		if err != nil {
-			slog.Error("error compiling regexp value", "error", err)
-			os.Exit(1)
+			return ErrCompileRegexp
 		}
 		if !reg.MatchString(field.String()) {
 			return ErrValidateStringRegexp
@@ -128,8 +132,7 @@ func validateInt(field reflect.Value, tagKey, tagValue string) error {
 	case "min":
 		val, err := strconv.Atoi(tagValue)
 		if err != nil {
-			slog.Error("error converting min to int", "error", err)
-			os.Exit(1)
+			return ErrConvertToInt
 		}
 		if int(field.Int()) < val {
 			return ErrValidateIntMin
@@ -138,8 +141,7 @@ func validateInt(field reflect.Value, tagKey, tagValue string) error {
 	case "max":
 		val, err := strconv.Atoi(tagValue)
 		if err != nil {
-			slog.Error("error converting max to int", "error", err)
-			os.Exit(1)
+			return ErrConvertToInt
 		}
 		if int(field.Int()) > val {
 			return ErrValidateIntMax
@@ -150,8 +152,7 @@ func validateInt(field reflect.Value, tagKey, tagValue string) error {
 		for _, val := range arrayVals {
 			val, err := strconv.Atoi(val)
 			if err != nil {
-				slog.Error("error in:string to int", "error", err)
-				os.Exit(1)
+				return ErrConvertToInt
 			}
 			if int(field.Int()) == val {
 				return nil
