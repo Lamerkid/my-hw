@@ -33,7 +33,7 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 		if err := easyjson.Unmarshal(scanner.Bytes(), &user); err != nil {
 			return nil, fmt.Errorf("unmarshaling error: %w", err)
 		}
-		if strings.HasSuffix(user.Email, domain) {
+		if strings.HasSuffix(user.Email, "."+domain) {
 			result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]++
 		}
 	}

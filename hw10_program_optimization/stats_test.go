@@ -39,7 +39,9 @@ func TestGetDomainStat(t *testing.T) {
 	})
 
 	data = data + `
-{"Id":6,"Name":"No domain","Username":"Nodomain","Email":"domain.com@nodomain","Phone":"146-91-01","Password":"acSBF5","Address":"Russell Trail 61"}`
+{"Id":6,"Name":"No domain","Username":"Nodomain","Email":"domain.com@nodomain","Phone":"146-91-01","Password":"acSBF5","Address":"Russell Trail 61"}
+{"Id":7,"Name":"Sale domain","Username":"Sale","Email":"prosale@domain.sale","Phone":"146-91-01","Password":"acSBF5","Address":"Russell Trail 61"}
+{"Id":8,"Name":"Prosale domain","Username":"Prosale","Email":"prosale@domain.prosale","Phone":"146-91-01","Password":"acSBF5","Address":"Russell Trail 61"}`
 
 	t.Run("do not find 'com' before @", func(t *testing.T) {
 		result, err := GetDomainStat(bytes.NewBufferString(data), "com")
@@ -47,6 +49,14 @@ func TestGetDomainStat(t *testing.T) {
 		require.Equal(t, DomainStat{
 			"browsecat.com": 2,
 			"linktype.com":  1,
+		}, result)
+	})
+
+	t.Run("find only 'sale'", func(t *testing.T) {
+		result, err := GetDomainStat(bytes.NewBufferString(data), "sale")
+		require.NoError(t, err)
+		require.Equal(t, DomainStat{
+			"domain.sale": 1,
 		}, result)
 	})
 }
