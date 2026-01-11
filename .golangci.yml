@@ -16,6 +16,7 @@ linters-settings:
           - "!$test"
         allow:
           - $gostd
+          - github.com/mailru/easyjson
       Test:
         files:
           - $test
