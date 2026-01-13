@@ -1,20 +1,50 @@
 package main
 
+import (
+	"fmt"
+	"os"
+	"time"
+
+	"gopkg.in/yaml.v3"
+)
+
 // При желании конфигурацию можно вынести в internal/config.
 // Организация конфига в main принуждает нас сужать API компонентов, использовать
 // при их конструировании только необходимые параметры, а также уменьшает вероятность циклической зависимости.
 type Config struct {
-	Logger LoggerConf
-	// TODO
+	Logger  LoggerConf    `yaml:"logger"`
+	Port    uint32        `yaml:"port"`
+	Timeout time.Duration `yaml:"timeout"`
+	Hosts   []string      `yaml:"hosts"`
 }
 
 type LoggerConf struct {
-	Level string
-	// TODO
+	Level string `yaml:"level"`
 }
 
-func NewConfig() Config {
-	return Config{}
+func (c *Config) ReadConfig(path string) error {
+	confFile, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer confFile.Close()
+
+	decoder := yaml.NewDecoder(confFile)
+	if err = decoder.Decode(c); err != nil {
+		return err
+	}
+	return c.ValidateConfig()
 }
 
-// TODO
+func (c *Config) ValidateConfig() error {
+	if c.Port == 0 {
+		return fmt.Errorf("port is not specified")
+	}
+	if len(c.Hosts) == 0 {
+		return fmt.Errorf("hosts are not specified")
+	}
+	if c.Timeout == 0 {
+		c.Timeout = 30 * time.Second
+	}
+	return nil
+}

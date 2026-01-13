@@ -1,5 +1,8 @@
-[logger]
-level = "INFO"
+logger:
+  level: "DEBUG"
 
-# TODO
-# ...
+port: "6767"
+timeOut: 30
+
+hosts:
+  - "calendar.abc/hello"
