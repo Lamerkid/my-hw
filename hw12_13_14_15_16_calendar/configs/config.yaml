@@ -4,5 +4,8 @@ logger:
 port: "6767"
 timeOut: 30
 
+dbConnetion: "postgres://myuser:mypass@localhost:5432/mydb?sslmode=verify-full"
+storage: "inMemory"
+
 hosts:
   - "calendar.abc/hello"

@@ -40,7 +40,7 @@ func (l *Logger) log(level LogLevel, levelName, msg string) {
 	if level < l.Level {
 		return
 	}
-	timestamp := time.Now().UTC().Format("2006-01-02 15:04:05")
+	timestamp := time.Now().UTC().Format(time.RFC3339)
 
 	fmt.Fprintf(l.output, "%s [%s]: %s\n", timestamp, levelName, msg)
 }

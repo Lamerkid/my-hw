@@ -12,14 +12,20 @@ import (
 // Организация конфига в main принуждает нас сужать API компонентов, использовать
 // при их конструировании только необходимые параметры, а также уменьшает вероятность циклической зависимости.
 type Config struct {
-	Logger  LoggerConf    `yaml:"logger"`
-	Port    uint32        `yaml:"port"`
-	Timeout time.Duration `yaml:"timeout"`
-	Hosts   []string      `yaml:"hosts"`
+	Logger      LoggerConf    `yaml:"logger"`
+	Port        uint32        `yaml:"port"`
+	Timeout     time.Duration `yaml:"timeout"`
+	Hosts       []string      `yaml:"hosts"`
+	Storage     string        `yaml:"storage"`
+	DBConnetion string        `yaml:"dbConnetion"`
 }
 
 type LoggerConf struct {
 	Level string `yaml:"level"`
+}
+
+func New() *Config {
+	return &Config{}
 }
 
 func (c *Config) ReadConfig(path string) error {

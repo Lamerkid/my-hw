@@ -13,6 +13,7 @@ import (
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/logger"
 	internalhttp "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/server/http"
 	memorystorage "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/memory"
+	sqlstorage "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
 var configFile string
@@ -29,22 +30,26 @@ func main() {
 		return
 	}
 
-	var config Config
+	config := New()
 	if err := config.ReadConfig(configFile); err != nil {
 		fmt.Println("Error readin config file: ", err)
 		os.Exit(1)
 	}
-
-	logg := logger.New(config.Logger.Level)
-
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
-
-	server := internalhttp.NewServer(logg, calendar)
-
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
+
+	logg := logger.New(config.Logger.Level)
+	storage, cleanup, err := setupStorage(ctx, *config, *logg)
+	if err != nil {
+		logg.Error("Failed to setup storage: " + err.Error())
+		os.Exit(1)
+	}
+	defer cleanup()
+
+	calendar := app.New(logg, storage)
+
+	server := internalhttp.NewServer(logg, calendar)
 
 	go func() {
 		<-ctx.Done()
@@ -63,5 +68,26 @@ func main() {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic
+	}
+}
+
+func setupStorage(ctx context.Context, config Config, logger logger.Logger) (app.Storage, func(), error) {
+	switch config.Storage {
+	case "inMemory":
+		return memorystorage.New(), func() {}, nil
+	case "Postgres":
+		storage := sqlstorage.New()
+		if err := storage.Connect(ctx, config.DBConnetion); err != nil {
+			return nil, nil, err
+		}
+
+		cleanup := func() {
+			if err := storage.Close(ctx); err != nil {
+				logger.Error("Failed to close db connection: " + err.Error())
+			}
+		}
+		return storage, cleanup, nil
+	default:
+		return nil, nil, fmt.Errorf("unknown storage type: %s", config.Storage)
 	}
 }
