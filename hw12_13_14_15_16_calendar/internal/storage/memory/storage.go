@@ -21,6 +21,11 @@ func New() *Storage {
 	}
 }
 
+func (s *Storage) Close() error {
+	s.data = nil
+	return nil
+}
+
 func (s *Storage) Write(ctx context.Context, event storage.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

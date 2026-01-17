@@ -18,12 +18,16 @@ linters-settings:
           - $gostd
           - github.com/mailru/easyjson
           - github.com/lamerkid/my-hw
+          - github.com/google/uuid
+          - github.com/jackc/pgx/v4/stdlib
       Test:
         files:
           - $test
         allow:
           - $gostd
           - github.com/stretchr/testify
+          - github.com/lamerkid/my-hw
+          - github.com/google/uuid
 issues:
   exclude-rules:
     - path: _test\.go

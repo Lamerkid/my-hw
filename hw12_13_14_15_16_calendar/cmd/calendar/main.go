@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -40,12 +42,20 @@ func main() {
 	defer cancel()
 
 	logg := logger.New(config.Logger.Level)
-	storage, cleanup, err := setupStorage(ctx, *config, *logg)
-	if err != nil {
-		logg.Error("Failed to setup storage: " + err.Error())
-		os.Exit(1)
+
+	var storage app.Storage
+
+	if config.Storage == "inMemory" {
+		storage = memorystorage.New()
+	} else if config.Storage == "Postgres" {
+		sqlStorage := sqlstorage.New()
+
+		if err := sqlStorage.Connect(ctx, config.DBConnetion); err != nil {
+			logg.Error("Failed to connect to SQL storage: " + err.Error())
+		}
+		storage = sqlStorage
 	}
-	defer cleanup()
+	defer storage.Close()
 
 	calendar := app.New(logg, storage)
 
@@ -64,30 +74,10 @@ func main() {
 
 	logg.Info("calendar is running...")
 
-	if err := server.Start(ctx); err != nil {
+	err := server.Start(config.Host, config.Port, config.Timeout)
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic
-	}
-}
-
-func setupStorage(ctx context.Context, config Config, logger logger.Logger) (app.Storage, func(), error) {
-	switch config.Storage {
-	case "inMemory":
-		return memorystorage.New(), func() {}, nil
-	case "Postgres":
-		storage := sqlstorage.New()
-		if err := storage.Connect(ctx, config.DBConnetion); err != nil {
-			return nil, nil, err
-		}
-
-		cleanup := func() {
-			if err := storage.Close(ctx); err != nil {
-				logger.Error("Failed to close db connection: " + err.Error())
-			}
-		}
-		return storage, cleanup, nil
-	default:
-		return nil, nil, fmt.Errorf("unknown storage type: %s", config.Storage)
 	}
 }

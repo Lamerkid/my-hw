@@ -12,10 +12,10 @@ import (
 // Организация конфига в main принуждает нас сужать API компонентов, использовать
 // при их конструировании только необходимые параметры, а также уменьшает вероятность циклической зависимости.
 type Config struct {
-	Logger      LoggerConf    `yaml:"logger"`
-	Port        uint32        `yaml:"port"`
+	Host        string        `yaml:"host"`
+	Port        string        `yaml:"port"`
 	Timeout     time.Duration `yaml:"timeout"`
-	Hosts       []string      `yaml:"hosts"`
+	Logger      LoggerConf    `yaml:"logger"`
 	Storage     string        `yaml:"storage"`
 	DBConnetion string        `yaml:"dbConnetion"`
 }
@@ -43,11 +43,11 @@ func (c *Config) ReadConfig(path string) error {
 }
 
 func (c *Config) ValidateConfig() error {
-	if c.Port == 0 {
+	if c.Port == "" {
 		return fmt.Errorf("port is not specified")
 	}
-	if len(c.Hosts) == 0 {
-		return fmt.Errorf("hosts are not specified")
+	if c.Host == "" {
+		return fmt.Errorf("host are not specified")
 	}
 	if c.Timeout == 0 {
 		c.Timeout = 30 * time.Second

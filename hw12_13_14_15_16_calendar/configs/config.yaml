@@ -1,11 +1,9 @@
 logger:
   level: "DEBUG"
 
-port: "6767"
+host: "127.0.0.1"
+port: "8080"
 timeOut: 30
 
 dbConnetion: "postgres://myuser:mypass@localhost:5432/mydb?sslmode=verify-full"
 storage: "inMemory"
-
-hosts:
-  - "calendar.abc/hello"
