@@ -2,7 +2,9 @@ package app
 
 import (
 	"context"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage"
 )
 
@@ -35,8 +37,19 @@ func New(logger Logger, storage Storage) *App {
 	}
 }
 
-func (a *App) CreateEvent(ctx context.Context, id, title string) error {
-	// TODO
+func (a *App) CreateEvent(ctx context.Context) error { // TODO
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return err
+	}
+	a.storage.Write(ctx, storage.Event{
+		ID:          id,
+		Title:       "",
+		StartTime:   time.Now(), // TODO
+		EndTime:     time.Now(), // TODO
+		Description: "",
+		UserID:      uuid.Nil, // TODO
+	})
 	return nil
 	// return a.storage.CreateEvent(storage.Event{ID: id, Title: title})
 }

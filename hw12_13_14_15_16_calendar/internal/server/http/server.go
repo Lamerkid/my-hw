@@ -22,7 +22,7 @@ type Logger interface {
 }
 
 type Application interface {
-	CreateEvent(ctx context.Context, id, title string) error
+	CreateEvent(ctx context.Context) error
 }
 
 func NewServer(logger Logger, app Application) *Server {
