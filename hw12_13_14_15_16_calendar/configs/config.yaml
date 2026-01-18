@@ -1,5 +1,9 @@
-[logger]
-level = "INFO"
+logger:
+  level: "DEBUG"
 
-# TODO
-# ...
+host: "127.0.0.1"
+port: "8080"
+timeOut: 30
+
+dbConnetion: "postgres://myuser:mypass@localhost:5432/mydb?sslmode=verify-full"
+storage: "inMemory"
