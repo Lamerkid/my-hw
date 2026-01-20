@@ -25,35 +25,31 @@ func init() {
 }
 
 func main() {
+	os.Exit(run())
+}
+
+func run() (exitCode int) {
 	flag.Parse()
 
 	if flag.Arg(0) == "version" {
 		printVersion()
-		return
+		return 0
 	}
 
-	config := New()
-	if err := config.ReadConfig(configFile); err != nil {
-		fmt.Println("Error readin config file: ", err)
-		os.Exit(1)
+	config := New(configFile)
+	if err := config.ValidateConfig(); err != nil {
+		return 1
 	}
+
+	logg := logger.New(config.Logger.Level)
+
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
-	logg := logger.New(config.Logger.Level)
-
-	var storage app.Storage
-
-	if config.Storage == "inMemory" {
-		storage = memorystorage.New()
-	} else if config.Storage == "Postgres" {
-		sqlStorage := sqlstorage.New()
-
-		if err := sqlStorage.Connect(ctx, config.DBConnetion); err != nil {
-			logg.Error("Failed to connect to SQL storage: " + err.Error())
-		}
-		storage = sqlStorage
+	storage, err := NewStorage(ctx, config)
+	if err != nil {
+		return 2
 	}
 	defer storage.Close()
 
@@ -74,10 +70,27 @@ func main() {
 
 	logg.Info("calendar is running...")
 
-	err := server.Start(config.Host, config.Port, config.Timeout)
+	err = server.Start(config.Host, config.Port, config.Timeout)
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
-		os.Exit(1) //nolint:gocritic
+		return 3
+	}
+
+	return 0
+}
+
+func NewStorage(ctx context.Context, cfg *Config) (app.Storage, error) {
+	switch cfg.Storage.Type {
+	case "inMemory":
+		return memorystorage.New(), nil
+	case "Postgres":
+		sqlStorage := sqlstorage.New()
+		if err := sqlStorage.Connect(ctx, cfg.Storage.DSN); err != nil {
+			return nil, err
+		}
+		return sqlStorage, nil
+	default:
+		return nil, fmt.Errorf("unknown storage type: %s", cfg.Storage.Type)
 	}
 }

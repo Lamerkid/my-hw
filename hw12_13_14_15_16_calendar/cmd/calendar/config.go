@@ -12,24 +12,31 @@ import (
 // Организация конфига в main принуждает нас сужать API компонентов, использовать
 // при их конструировании только необходимые параметры, а также уменьшает вероятность циклической зависимости.
 type Config struct {
-	Host        string        `yaml:"host"`
-	Port        string        `yaml:"port"`
-	Timeout     time.Duration `yaml:"timeout"`
-	Logger      LoggerConf    `yaml:"logger"`
-	Storage     string        `yaml:"storage"`
-	DBConnetion string        `yaml:"dbConnetion"`
+	path    string
+	Host    string        `yaml:"host"`
+	Port    string        `yaml:"port"`
+	Timeout time.Duration `yaml:"timeout"`
+	Logger  LoggerConf    `yaml:"logger"`
+	Storage StorageConf   `yaml:"storage"`
 }
 
 type LoggerConf struct {
 	Level string `yaml:"level"`
 }
 
-func New() *Config {
-	return &Config{}
+type StorageConf struct {
+	Type string `yaml:"type"`
+	DSN  string `yaml:"dsn"`
 }
 
-func (c *Config) ReadConfig(path string) error {
-	confFile, err := os.Open(path)
+func New(path string) *Config {
+	return &Config{
+		path: path,
+	}
+}
+
+func (c *Config) ValidateConfig() error {
+	confFile, err := os.Open(c.path)
 	if err != nil {
 		return err
 	}
@@ -39,10 +46,10 @@ func (c *Config) ReadConfig(path string) error {
 	if err = decoder.Decode(c); err != nil {
 		return err
 	}
-	return c.ValidateConfig()
+	return c.ValidateFields()
 }
 
-func (c *Config) ValidateConfig() error {
+func (c *Config) ValidateFields() error {
 	if c.Port == "" {
 		return fmt.Errorf("port is not specified")
 	}
