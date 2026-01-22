@@ -10,7 +10,7 @@ import (
 type LogLevel int
 
 const (
-	DEBUG LogLevel = iota
+	DEBUG LogLevel = iota + 1
 	INFO
 	WARN
 	ERROR

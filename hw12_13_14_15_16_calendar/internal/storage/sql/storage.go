@@ -6,7 +6,7 @@ import (
 
 	// Use pgx driver.
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage"
+	model "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/models"
 )
 
 type Storage struct {
@@ -29,7 +29,7 @@ func (s *Storage) Close() error {
 	return s.db.Close()
 }
 
-func (s *Storage) Write(ctx context.Context, event storage.Event) error {
+func (s *Storage) Write(ctx context.Context, event model.Event) error {
 	query := `INSERT INTO events(id, title, start_time, end_time, description, user_id) 
 	values($1, $2, $3, $4, $5, $6)`
 	_, err := s.db.ExecContext(ctx,
@@ -46,7 +46,7 @@ func (s *Storage) Write(ctx context.Context, event storage.Event) error {
 	return nil
 }
 
-func (s *Storage) Update(ctx context.Context, event storage.Event) error {
+func (s *Storage) Update(ctx context.Context, event model.Event) error {
 	query := `UPDATE events
 	SET (title, start_time, end_time, description, user_id) 
 	values($1, $2, $3, $4, $5)
@@ -65,7 +65,7 @@ func (s *Storage) Update(ctx context.Context, event storage.Event) error {
 	return nil
 }
 
-func (s *Storage) Delete(ctx context.Context, event storage.Event) error {
+func (s *Storage) Delete(ctx context.Context, event model.Event) error {
 	query := `DELETE FROM events
 	WHERE events.id = $1`
 	_, err := s.db.ExecContext(ctx, query, event.ID)
@@ -75,8 +75,8 @@ func (s *Storage) Delete(ctx context.Context, event storage.Event) error {
 	return nil
 }
 
-func (s *Storage) EventsByDay(ctx context.Context, date string) ([]storage.Event, error) {
-	var events []storage.Event
+func (s *Storage) EventsByDay(ctx context.Context, date string) ([]model.Event, error) {
+	var events []model.Event
 	query := `SELECT id, title, start_time, end_time, description, user_id
 	FROM events
 	WHERE start_time::date = $1`
@@ -87,7 +87,7 @@ func (s *Storage) EventsByDay(ctx context.Context, date string) ([]storage.Event
 	defer rows.Close()
 
 	for rows.Next() {
-		var event storage.Event
+		var event model.Event
 		err := rows.Scan(&event.ID,
 			&event.Title,
 			&event.StartTime,
@@ -105,8 +105,8 @@ func (s *Storage) EventsByDay(ctx context.Context, date string) ([]storage.Event
 	return events, nil
 }
 
-func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]storage.Event, error) {
-	var events []storage.Event
+func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]model.Event, error) {
+	var events []model.Event
 	query := `SELECT id, title, start_time, end_time, description, user_id
 	FROM events
 	WHERE start_time BETWEEN $1::date and $1::date + interval '7 day'`
@@ -117,7 +117,7 @@ func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]storage.Even
 	defer rows.Close()
 
 	for rows.Next() {
-		var event storage.Event
+		var event model.Event
 		err := rows.Scan(&event.ID,
 			&event.Title,
 			&event.StartTime,
@@ -135,8 +135,8 @@ func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]storage.Even
 	return events, nil
 }
 
-func (s *Storage) EventsByMonth(ctx context.Context, date string) ([]storage.Event, error) {
-	var events []storage.Event
+func (s *Storage) EventsByMonth(ctx context.Context, date string) ([]model.Event, error) {
+	var events []model.Event
 	query := `SELECT id, title, start_time, end_time, description, user_id
 	FROM events
 	WHERE start_time BETWEEN $1::date and $1::date + interval '1 month'`
@@ -147,7 +147,7 @@ func (s *Storage) EventsByMonth(ctx context.Context, date string) ([]storage.Eve
 	defer rows.Close()
 
 	for rows.Next() {
-		var event storage.Event
+		var event model.Event
 		err := rows.Scan(&event.ID,
 			&event.Title,
 			&event.StartTime,

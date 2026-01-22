@@ -4,8 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage"
+	model "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/models"
 )
 
 type App struct {
@@ -22,12 +21,12 @@ type Logger interface {
 
 type Storage interface {
 	Close() error
-	Write(ctx context.Context, event storage.Event) error
-	Update(ctx context.Context, event storage.Event) error
-	Delete(ctx context.Context, event storage.Event) error
-	EventsByDay(ctx context.Context, date string) ([]storage.Event, error)
-	EventsByWeek(ctx context.Context, date string) ([]storage.Event, error)
-	EventsByMonth(ctx context.Context, date string) ([]storage.Event, error)
+	Write(ctx context.Context, event model.Event) error
+	Update(ctx context.Context, event model.Event) error
+	Delete(ctx context.Context, event model.Event) error
+	EventsByDay(ctx context.Context, date string) ([]model.Event, error)
+	EventsByWeek(ctx context.Context, date string) ([]model.Event, error)
+	EventsByMonth(ctx context.Context, date string) ([]model.Event, error)
 }
 
 func New(logger Logger, storage Storage) *App {
@@ -37,21 +36,38 @@ func New(logger Logger, storage Storage) *App {
 	}
 }
 
-func (a *App) CreateEvent(ctx context.Context) error { // TODO
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return err
-	}
-	a.storage.Write(ctx, storage.Event{
-		ID:          id,
-		Title:       "",
-		StartTime:   time.Now(), // TODO
-		EndTime:     time.Now(), // TODO
-		Description: "",
-		UserID:      uuid.Nil, // TODO
-	})
-	return nil
-	// return a.storage.CreateEvent(storage.Event{ID: id, Title: title})
+func (a *App) CreateEvent(ctx context.Context, event model.Event) error {
+	appCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	return a.storage.Write(appCtx, event)
 }
 
-// TODO
+func (a *App) UpdateEvent(ctx context.Context, event model.Event) error {
+	appCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	return a.storage.Update(appCtx, event)
+}
+
+func (a *App) DeleteEvent(ctx context.Context, event model.Event) error {
+	appCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	return a.storage.Delete(appCtx, event)
+}
+
+func (a *App) SelectEventByDay(ctx context.Context, date string) ([]model.Event, error) {
+	appCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	return a.storage.EventsByDay(appCtx, date)
+}
+
+func (a *App) SelectEventByWeek(ctx context.Context, date string) ([]model.Event, error) {
+	appCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	return a.storage.EventsByWeek(appCtx, date)
+}
+
+func (a *App) SelectEventByMonth(ctx context.Context, date string) ([]model.Event, error) {
+	appCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	return a.storage.EventsByMonth(appCtx, date)
+}

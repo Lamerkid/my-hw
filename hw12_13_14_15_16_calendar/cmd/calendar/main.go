@@ -4,18 +4,17 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	config "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/configs"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/logger"
 	internalhttp "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/memory"
-	sqlstorage "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/sql"
+	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage"
 )
 
 var configFile string
@@ -36,8 +35,8 @@ func run() (exitCode int) {
 		return 0
 	}
 
-	config := New(configFile)
-	if err := config.ValidateConfig(); err != nil {
+	config, err := config.LoadConfig(configFile)
+	if err != nil {
 		return 1
 	}
 
@@ -47,7 +46,7 @@ func run() (exitCode int) {
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
-	storage, err := NewStorage(ctx, config)
+	storage, err := storage.NewStorage(ctx, config)
 	if err != nil {
 		return 2
 	}
@@ -70,7 +69,7 @@ func run() (exitCode int) {
 
 	logg.Info("calendar is running...")
 
-	err = server.Start(config.Host, config.Port, config.Timeout)
+	err = server.Start(config.Server.Host, config.Server.Port, config.Server.Timeout)
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
@@ -78,19 +77,4 @@ func run() (exitCode int) {
 	}
 
 	return 0
-}
-
-func NewStorage(ctx context.Context, cfg *Config) (app.Storage, error) {
-	switch cfg.Storage.Type {
-	case "inMemory":
-		return memorystorage.New(), nil
-	case "Postgres":
-		sqlStorage := sqlstorage.New()
-		if err := sqlStorage.Connect(ctx, cfg.Storage.DSN); err != nil {
-			return nil, err
-		}
-		return sqlStorage, nil
-	default:
-		return nil, fmt.Errorf("unknown storage type: %s", cfg.Storage.Type)
-	}
 }

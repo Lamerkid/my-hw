@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage"
+	model "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/models"
 	"github.com/stretchr/testify/require"
 )
 
-var event1 = storage.Event{
+var event1 = model.Event{
 	ID:          uuid.New(),
 	Title:       "test1",
 	StartTime:   time.Date(2026, 1, 15, 0, 30, 0, 0, time.UTC),
@@ -21,7 +21,7 @@ var event1 = storage.Event{
 	UserID:      uuid.New(),
 }
 
-var event2 = storage.Event{
+var event2 = model.Event{
 	ID:          uuid.New(),
 	Title:       "test2",
 	StartTime:   time.Date(2026, 1, 15, 0, 30, 0, 0, time.UTC).AddDate(0, 0, 5),
@@ -30,7 +30,7 @@ var event2 = storage.Event{
 	UserID:      uuid.New(),
 }
 
-var event3 = storage.Event{
+var event3 = model.Event{
 	ID:          uuid.New(),
 	Title:       "test3",
 	StartTime:   time.Date(2026, 1, 15, 0, 30, 0, 0, time.UTC).AddDate(0, 0, 10),
@@ -39,7 +39,7 @@ var event3 = storage.Event{
 	UserID:      uuid.New(),
 }
 
-var event4 = storage.Event{
+var event4 = model.Event{
 	ID:          uuid.New(),
 	Title:       "test4",
 	StartTime:   time.Date(2026, 1, 15, 0, 30, 0, 0, time.UTC).AddDate(0, 1, 1),
