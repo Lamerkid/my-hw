@@ -7,17 +7,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	model "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/models"
+	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/domain"
 )
 
 type Storage struct {
-	data map[uuid.UUID]model.Event
+	data map[uuid.UUID]domain.Event
 	mu   sync.RWMutex
 }
 
 func New() *Storage {
 	return &Storage{
-		data: make(map[uuid.UUID]model.Event),
+		data: make(map[uuid.UUID]domain.Event),
 	}
 }
 
@@ -26,7 +26,7 @@ func (s *Storage) Close() error {
 	return nil
 }
 
-func (s *Storage) Write(ctx context.Context, event model.Event) error {
+func (s *Storage) Write(ctx context.Context, event domain.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	select {
@@ -42,7 +42,7 @@ func (s *Storage) Write(ctx context.Context, event model.Event) error {
 	}
 }
 
-func (s *Storage) Update(ctx context.Context, event model.Event) error {
+func (s *Storage) Update(ctx context.Context, event domain.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	select {
@@ -58,7 +58,7 @@ func (s *Storage) Update(ctx context.Context, event model.Event) error {
 	}
 }
 
-func (s *Storage) Delete(ctx context.Context, event model.Event) error {
+func (s *Storage) Delete(ctx context.Context, event domain.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	select {
@@ -74,20 +74,20 @@ func (s *Storage) Delete(ctx context.Context, event model.Event) error {
 	}
 }
 
-func (s *Storage) EventsByDay(ctx context.Context, date string) ([]model.Event, error) {
+func (s *Storage) EventsByDay(ctx context.Context, date string) ([]domain.Event, error) {
 	return CollectEvents(ctx, s, date, 0, 1)
 }
 
-func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]model.Event, error) {
+func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]domain.Event, error) {
 	return CollectEvents(ctx, s, date, 0, 7)
 }
 
-func (s *Storage) EventsByMonth(ctx context.Context, date string) ([]model.Event, error) {
+func (s *Storage) EventsByMonth(ctx context.Context, date string) ([]domain.Event, error) {
 	return CollectEvents(ctx, s, date, 1, 0)
 }
 
-func CollectEvents(ctx context.Context, s *Storage, date string, month, day int) ([]model.Event, error) {
-	var events []model.Event
+func CollectEvents(ctx context.Context, s *Storage, date string, month, day int) ([]domain.Event, error) {
+	var events []domain.Event
 	parsedDate, err := time.Parse(time.DateOnly, date)
 	if err != nil {
 		return nil, err

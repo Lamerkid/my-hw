@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	config "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/configs"
+	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/domain"
 	memorystorage "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/memory"
-	model "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/models"
 	sqlstorage "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
@@ -17,14 +17,15 @@ const (
 	StorageTypePostgres
 )
 
+// Output interface
 type Storage interface {
 	Close() error
-	Write(ctx context.Context, event model.Event) error
-	Update(ctx context.Context, event model.Event) error
-	Delete(ctx context.Context, event model.Event) error
-	EventsByDay(ctx context.Context, date string) ([]model.Event, error)
-	EventsByWeek(ctx context.Context, date string) ([]model.Event, error)
-	EventsByMonth(ctx context.Context, date string) ([]model.Event, error)
+	Write(ctx context.Context, event domain.Event) error
+	Update(ctx context.Context, event domain.Event) error
+	Delete(ctx context.Context, event domain.Event) error
+	EventsByDay(ctx context.Context, date string) ([]domain.Event, error)
+	EventsByWeek(ctx context.Context, date string) ([]domain.Event, error)
+	EventsByMonth(ctx context.Context, date string) ([]domain.Event, error)
 }
 
 func NewStorage(ctx context.Context, cfg config.Config) (Storage, error) {

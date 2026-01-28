@@ -1,0 +1,155 @@
+openapi: 3.0.4
+info:
+  title: Swagger calendar app - OpenAPI 3.0
+  description: Calendar app api specification.
+  version: 1.0.0
+servers:
+  - url: https://localhost:8080/api/v3
+paths:
+  /event:
+    post:
+      tags:
+        - Events
+      summary: Add new event to the calendar.
+      description: Add new event to the calendar.
+      operationId: addEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:
+      tags:
+        - Events
+      summary: Find event by ID.
+      description: Returns a single event.
+      operationId: getEvent
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '404':
+          description: Events not found
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /event/{event_id}:
+    put:
+      tags:
+        - Events
+      summary: Update existing event by ID.
+      description: Update one existing event.
+      operationId: updateEventById
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          description: Event id to upadate.
+          schema:
+            type: string
+          example: 0cbab9e1-c509-40ec-b6cf-61f74599ff9b
+      requestBody:
+        required: true
+        description: Update an existent event in the calendar.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Event not found
+        '422':
+          description: Validation exception
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags:
+        - Events
+      summary: Delete a event.
+      description: Deleted a single event.
+      operationId: deleteEventById
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          description: Event id to delete.
+          schema:
+            type: string
+          example: 0cbab9e1-c509-40ec-b6cf-61f74599ff9b
+      responses:
+        '200':
+          description: Event deleted
+        '400':
+          description: Invalid event value
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Event:
+      required:
+        - event_id
+        - title
+      type: object
+      properties:
+        event_id:
+          type: string
+          example: 314a4a09-35d2-42b7-984d-6b5bf4cee649
+        title:
+          type: string
+          example: celebration
+        description:
+          type: string
+          example: celebration of event
+        created_at:
+          type: string
+          example: 2006-01-02T15:04:05Z07:00
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      required:
+        - code
+        - message
