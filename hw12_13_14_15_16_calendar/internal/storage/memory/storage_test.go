@@ -83,21 +83,21 @@ func TestStorage(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, monthResult, 3)
 
-		err = storage.Delete(ctx, event1)
+		err = storage.Delete(ctx, event1.ID)
 		require.NoError(t, err)
 
-		err = storage.Delete(ctx, event2)
+		err = storage.Delete(ctx, event2.ID)
 		require.NoError(t, err)
 
-		err = storage.Delete(ctx, event3)
+		err = storage.Delete(ctx, event3.ID)
 		require.NoError(t, err)
 
-		err = storage.Delete(ctx, event4)
+		err = storage.Delete(ctx, event4.ID)
 		require.NoError(t, err)
 
 		require.Len(t, storage.data, 0)
 
-		err = storage.Delete(ctx, event3)
+		err = storage.Delete(ctx, event3.ID)
 		require.Error(t, err)
 	})
 }
@@ -114,7 +114,7 @@ func BenchmarkStorage(b *testing.B) {
 			for pb.Next() {
 				storage.Write(ctx, event1)
 				storage.Update(ctx, event1)
-				storage.Delete(ctx, event1)
+				storage.Delete(ctx, event1.ID)
 			}
 		})
 	})
@@ -136,7 +136,7 @@ func BenchmarkStorage(b *testing.B) {
 			for pb.Next() {
 				storage.Write(ctx, event1)
 				storage.EventsByDay(ctx, "2026-01-15")
-				storage.Delete(ctx, event1)
+				storage.Delete(ctx, event1.ID)
 			}
 		})
 	})

@@ -4,7 +4,7 @@ import "google/protobuf/timestamp.proto";
 
 package event;
 
-option go_package = "./;pb";
+option go_package = "./;internalgrpc";
 
 service EventService {
     rpc CreateEvent (CreateEventRequest) returns (CreateEventResponse);
@@ -20,7 +20,8 @@ message Event {
     string title = 2;
     string description = 3;
     google.protobuf.Timestamp start_time = 4;
-    string user_id = 5;
+    google.protobuf.Timestamp end_time = 5;
+    string user_id = 6;
 }
 
 message CreateEventRequest {

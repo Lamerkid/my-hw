@@ -21,7 +21,7 @@ type Logger struct {
 	output io.Writer
 }
 
-func New(level string) *Logger {
+func NewLogger(level string) *Logger {
 	switch level {
 	case "DEBUG":
 		return &Logger{Level: DEBUG, output: os.Stdout}
@@ -36,27 +36,29 @@ func New(level string) *Logger {
 	}
 }
 
-func (l *Logger) log(level LogLevel, levelName, msg string) {
+func (l *Logger) log(level LogLevel, levelName, msg string, args ...any) {
 	if level < l.Level {
 		return
 	}
 	timestamp := time.Now().UTC().Format(time.RFC3339)
 
-	fmt.Fprintf(l.output, "%s [%s]: %s\n", timestamp, levelName, msg)
+	formattedMsg := fmt.Sprintf(msg, args...)
+
+	fmt.Fprintf(l.output, "%s [%s]: %s\n", timestamp, levelName, formattedMsg)
 }
 
-func (l *Logger) Debug(msg string) {
-	l.log(DEBUG, "DEBUG", msg)
+func (l *Logger) Debug(msg string, args ...any) {
+	l.log(DEBUG, "DEBUG", msg, args...)
 }
 
-func (l *Logger) Info(msg string) {
-	l.log(INFO, "INFO", msg)
+func (l *Logger) Info(msg string, args ...any) {
+	l.log(INFO, "INFO", msg, args...)
 }
 
-func (l *Logger) Warn(msg string) {
-	l.log(WARN, "WARN", msg)
+func (l *Logger) Warn(msg string, args ...any) {
+	l.log(WARN, "WARN", msg, args...)
 }
 
-func (l *Logger) Error(msg string) {
-	l.log(ERROR, "ERROR", msg)
+func (l *Logger) Error(msg string, args ...any) {
+	l.log(ERROR, "ERROR", msg, args...)
 }

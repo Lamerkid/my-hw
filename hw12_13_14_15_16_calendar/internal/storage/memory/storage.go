@@ -58,19 +58,34 @@ func (s *Storage) Update(ctx context.Context, event domain.Event) error {
 	}
 }
 
-func (s *Storage) Delete(ctx context.Context, event domain.Event) error {
+func (s *Storage) Delete(ctx context.Context, id uuid.UUID) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
-		_, exists := s.data[event.ID]
+		_, exists := s.data[id]
 		if !exists {
 			return fmt.Errorf("entry is not present in storage")
 		}
-		delete(s.data, event.ID)
+		delete(s.data, id)
 		return nil
+	}
+}
+
+func (s *Storage) GetEvent(ctx context.Context, id uuid.UUID) (domain.Event, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	select {
+	case <-ctx.Done():
+		return domain.Event{}, ctx.Err()
+	default:
+		event, exists := s.data[id]
+		if !exists {
+			return domain.Event{}, fmt.Errorf("entry is not present in storage")
+		}
+		return event, nil
 	}
 }
 

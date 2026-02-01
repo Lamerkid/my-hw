@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -40,7 +38,7 @@ func run() (exitCode int) {
 		return 1
 	}
 
-	logg := logger.New(config.Logger.Level)
+	logg := logger.NewLogger(config.Logger.Level)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -52,9 +50,11 @@ func run() (exitCode int) {
 	}
 	defer storage.Close()
 
-	calendar := app.New(logg, storage)
+	calendar := app.NewApp(logg, storage)
 
-	server := internalhttp.NewServer(logg, calendar)
+	handler := internalhttp.NewHandler(logg, calendar)
+
+	server := internalhttp.NewServer(logg, handler)
 
 	go func() {
 		<-ctx.Done()
@@ -63,18 +63,18 @@ func run() (exitCode int) {
 		defer cancel()
 
 		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+			logg.Error("failed to stop http server: %v", err)
 		}
 	}()
 
 	logg.Info("calendar is running...")
 
-	err = server.Start(config.Server.Host, config.Server.Port, config.Server.Timeout)
-	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		logg.Error("failed to start http server: " + err.Error())
+	if err = server.Start(ctx, config.Server.Host, config.Server.Port, config.Server.Timeout); err != nil {
+		logg.Error("failed to start http server: %v", err)
 		cancel()
 		return 3
 	}
 
+	logg.Info("calendar has stoped running...")
 	return 0
 }

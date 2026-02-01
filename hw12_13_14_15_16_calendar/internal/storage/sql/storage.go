@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	// Use pgx driver.
+	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/domain"
 )
@@ -30,15 +31,15 @@ func (s *Storage) Close() error {
 }
 
 func (s *Storage) Write(ctx context.Context, event domain.Event) error {
-	query := `INSERT INTO events(id, title, start_time, end_time, description, user_id) 
+	query := `INSERT INTO events(id, title, description, start_time, end_time, user_id) 
 	values($1, $2, $3, $4, $5, $6)`
 	_, err := s.db.ExecContext(ctx,
 		query,
 		event.ID,
 		event.Title,
+		event.Description,
 		event.StartTime,
 		event.EndTime,
-		event.Description,
 		event.UserID)
 	if err != nil {
 		return err
@@ -48,15 +49,15 @@ func (s *Storage) Write(ctx context.Context, event domain.Event) error {
 
 func (s *Storage) Update(ctx context.Context, event domain.Event) error {
 	query := `UPDATE events
-	SET (title, start_time, end_time, description, user_id) 
+	SET (title, description, start_time, end_time, user_id) 
 	values($1, $2, $3, $4, $5)
 	WHERE events.id = $6`
 	_, err := s.db.ExecContext(ctx,
 		query,
 		event.Title,
+		event.Description,
 		event.StartTime,
 		event.EndTime,
-		event.Description,
 		event.UserID,
 		event.ID)
 	if err != nil {
@@ -65,19 +66,44 @@ func (s *Storage) Update(ctx context.Context, event domain.Event) error {
 	return nil
 }
 
-func (s *Storage) Delete(ctx context.Context, event domain.Event) error {
+func (s *Storage) Delete(ctx context.Context, id uuid.UUID) error {
 	query := `DELETE FROM events
 	WHERE events.id = $1`
-	_, err := s.db.ExecContext(ctx, query, event.ID)
+	_, err := s.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+func (s *Storage) GetEvent(ctx context.Context, id uuid.UUID) (domain.Event, error) {
+	query := `SELECT FROM events
+	WHERE events.id = $1`
+	rows, err := s.db.QueryContext(ctx, query, id)
+	if err != nil {
+		return domain.Event{}, err
+	}
+	defer rows.Close()
+
+	var event domain.Event
+	err = rows.Scan(&event.ID,
+		&event.Title,
+		&event.Description,
+		&event.StartTime,
+		&event.EndTime,
+		&event.UserID)
+	if err != nil {
+		return domain.Event{}, err
+	}
+	if err := rows.Err(); err != nil {
+		return domain.Event{}, err
+	}
+	return event, nil
+}
+
 func (s *Storage) EventsByDay(ctx context.Context, date string) ([]domain.Event, error) {
 	var events []domain.Event
-	query := `SELECT id, title, start_time, end_time, description, user_id
+	query := `SELECT id, title, description, start_time, end_time, user_id
 	FROM events
 	WHERE start_time::date = $1`
 	rows, err := s.db.QueryContext(ctx, query, date)
@@ -90,9 +116,9 @@ func (s *Storage) EventsByDay(ctx context.Context, date string) ([]domain.Event,
 		var event domain.Event
 		err := rows.Scan(&event.ID,
 			&event.Title,
+			&event.Description,
 			&event.StartTime,
 			&event.EndTime,
-			&event.Description,
 			&event.UserID)
 		if err != nil {
 			return nil, err
@@ -107,7 +133,7 @@ func (s *Storage) EventsByDay(ctx context.Context, date string) ([]domain.Event,
 
 func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]domain.Event, error) {
 	var events []domain.Event
-	query := `SELECT id, title, start_time, end_time, description, user_id
+	query := `SELECT id, title, description, start_time, end_time, user_id
 	FROM events
 	WHERE start_time BETWEEN $1::date and $1::date + interval '7 day'`
 	rows, err := s.db.QueryContext(ctx, query, date)
@@ -120,9 +146,9 @@ func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]domain.Event
 		var event domain.Event
 		err := rows.Scan(&event.ID,
 			&event.Title,
+			&event.Description,
 			&event.StartTime,
 			&event.EndTime,
-			&event.Description,
 			&event.UserID)
 		if err != nil {
 			return nil, err
@@ -137,7 +163,7 @@ func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]domain.Event
 
 func (s *Storage) EventsByMonth(ctx context.Context, date string) ([]domain.Event, error) {
 	var events []domain.Event
-	query := `SELECT id, title, start_time, end_time, description, user_id
+	query := `SELECT id, title, description, start_time, end_time, user_id
 	FROM events
 	WHERE start_time BETWEEN $1::date and $1::date + interval '1 month'`
 	rows, err := s.db.QueryContext(ctx, query, date)
@@ -150,9 +176,9 @@ func (s *Storage) EventsByMonth(ctx context.Context, date string) ([]domain.Even
 		var event domain.Event
 		err := rows.Scan(&event.ID,
 			&event.Title,
+			&event.Description,
 			&event.StartTime,
 			&event.EndTime,
-			&event.Description,
 			&event.UserID)
 		if err != nil {
 			return nil, err
