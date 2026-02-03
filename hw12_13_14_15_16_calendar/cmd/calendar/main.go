@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	config "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/configs"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/app"
@@ -55,17 +54,6 @@ func run() (exitCode int) {
 	handler := internalhttp.NewHandler(logg, calendar)
 
 	server := internalhttp.NewServer(logg, handler)
-
-	go func() {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: %v", err)
-		}
-	}()
 
 	logg.Info("calendar is running...")
 

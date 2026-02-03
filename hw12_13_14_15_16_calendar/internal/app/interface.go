@@ -26,7 +26,8 @@ type Storage interface {
 	EventsByMonth(ctx context.Context, date string) ([]domain.Event, error)
 }
 
-// Output interface
+// EventService output interface.
+
 type EventService interface {
 	CreateEvent(ctx context.Context, cmd CreateEventCommand) (domain.Event, error)
 	UpdateEvent(ctx context.Context, cmd UpdateEventCommand) (domain.Event, error)
@@ -36,19 +37,18 @@ type EventService interface {
 	SelectEventByMonth(ctx context.Context, date time.Time) ([]domain.Event, error)
 }
 
-// DTO
 type CreateEventCommand struct {
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
-	StartTime   time.Time `json:"start_time"`
-	EndTime     time.Time `json:"end_time"`
-	UserID      uuid.UUID `json:"user_id"`
+	StartTime   time.Time `json:"startTime"`
+	EndTime     time.Time `json:"endTime"`
+	UserID      uuid.UUID `json:"userId"`
 }
 
 type UpdateEventCommand struct {
 	ID          uuid.UUID `json:"id"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
-	StartTime   time.Time `json:"start_time"`
-	EndTime     time.Time `json:"end_time"`
+	StartTime   time.Time `json:"startTime"`
+	EndTime     time.Time `json:"endTime"`
 }

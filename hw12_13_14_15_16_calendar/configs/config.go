@@ -29,10 +29,6 @@ type StorageConf struct {
 	DSN  string `yaml:"dsn"`
 }
 
-func New(path string) *Config {
-	return &Config{}
-}
-
 func LoadConfig(path string) (Config, error) {
 	var config Config
 	confFile, err := os.Open(path)

@@ -11,14 +11,13 @@ import (
 	sqlstorage "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
-type StorageType int
+type Type int
 
 const (
-	StorageTypeMemory StorageType = iota + 1
+	StorageTypeMemory Type = iota + 1
 	StorageTypePostgres
 )
 
-// Output interface
 type Storage interface {
 	Close() error
 	Write(ctx context.Context, event domain.Event) error
@@ -34,12 +33,12 @@ func NewStorage(ctx context.Context, cfg config.Config) (Storage, error) {
 	switch cfg.Storage.Type {
 	case "inMemory":
 		return memorystorage.New(), nil
-
 	case "postgres":
 		s := sqlstorage.New()
 		if err := s.Connect(ctx, cfg.Storage.DSN); err != nil {
 			return nil, fmt.Errorf("connect to postgres: %w", err)
 		}
+
 		return s, nil
 
 	default:

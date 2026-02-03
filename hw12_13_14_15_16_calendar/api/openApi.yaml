@@ -18,39 +18,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Event'
+              $ref: "#/components/schemas/Event"
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Event'
-        '400':
+                $ref: "#/components/schemas/Event"
+        "400":
           description: Invalid input
-        '422':
+        "422":
           description: Validation exception
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-    get:
-      tags:
-        - Events
-      summary: Find event by ID.
-      description: Returns a single event.
-      operationId: getEvent
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Event'
-        '404':
-          description: Events not found
         default:
           description: Unexpected error
           content:
@@ -63,7 +42,7 @@ paths:
         - Events
       summary: Update existing event by ID.
       description: Update one existing event.
-      operationId: updateEventById
+      operationId: updateEventByID
       parameters:
         - name: event_id
           in: path
@@ -78,19 +57,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Event'
+              $ref: "#/components/schemas/Event"
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Event'
-        '400':
+                $ref: "#/components/schemas/Event"
+        "400":
           description: Invalid ID supplied
-        '404':
+        "404":
           description: Event not found
-        '422':
+        "422":
           description: Validation exception
         default:
           description: Unexpected error
@@ -103,7 +82,7 @@ paths:
         - Events
       summary: Delete a event.
       description: Deleted a single event.
-      operationId: deleteEventById
+      operationId: deleteEventByID
       parameters:
         - name: event_id
           in: path
@@ -113,9 +92,9 @@ paths:
             type: string
           example: 0cbab9e1-c509-40ec-b6cf-61f74599ff9b
       responses:
-        '200':
+        "200":
           description: Event deleted
-        '400':
+        "400":
           description: Invalid event value
         default:
           description: Unexpected error
@@ -123,8 +102,51 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /event/select:
+    get:
+      tags:
+        - Events
+      summary: Select events.
+      description: Select a events by date range.
+      operationId: selectEventByDate
+      parameters:
+        - in: query
+          name: date
+          description: Date in format ...
+          schema:
+            type: string
+          required: false
+          example: "2026-01-15"
+        - in: query
+          name: range
+          description: Date range.
+          schema:
+            type: string
+          required: false
+          example: "week"
+      responses:
+        "200":
+          description: Found events
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventArray"
+        "400":
+          description: Invalid query value
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 components:
   schemas:
+    EventArray:
+      description: List of event object
+      type: array
+      items:
+        $ref: "#/components/schemas/Event"
     Event:
       required:
         - event_id

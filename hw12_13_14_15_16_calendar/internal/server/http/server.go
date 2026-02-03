@@ -2,7 +2,6 @@ package internalhttp
 
 import (
 	"context"
-	"errors"
 	"net"
 	"net/http"
 	"time"
@@ -27,7 +26,7 @@ func (s *Server) Start(ctx context.Context, host, port string, timeout time.Dura
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hello", s.handler.Hello)
 	mux.HandleFunc("/api/v3/event", s.handler.CreateEvent)
-	mux.HandleFunc("/api/v3/event/{id}", s.handler.EventByIdHandler)
+	mux.HandleFunc("/api/v3/event/{id}", s.handler.EventHandler)
 	mux.HandleFunc("/api/v3/event/select", s.handler.SelectEventHandler)
 
 	handler := loggingMiddleware(mux)
@@ -38,11 +37,26 @@ func (s *Server) Start(ctx context.Context, host, port string, timeout time.Dura
 		ReadHeaderTimeout: timeout,
 	}
 
-	if err := s.http.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	serverErr := make(chan error, 1)
+
+	go func() {
+		if err := s.http.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			serverErr <- err
+		} else {
+			serverErr <- nil
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		return s.Stop(shutdownCtx)
+
+	case err := <-serverErr:
 		return err
 	}
-
-	return nil
 }
 
 func (s *Server) Stop(ctx context.Context) error {

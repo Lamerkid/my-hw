@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	// Use pgx driver.
 	"github.com/google/uuid"
+	// Use pgx driver.
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/domain"
 )

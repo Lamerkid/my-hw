@@ -10,35 +10,37 @@ type Logger interface {
 }
 
 // DTO
+
 type CreateEventRequest struct {
 	Title       string    `json:"title"`
 	Description string    `json:"description,omitempty"`
-	StartTime   time.Time `json:"start_time"`
-	EndTime     time.Time `json:"end_time"`
-	UserID      string    `json:"user_id"`
+	StartTime   time.Time `json:"startTime"`
+	EndTime     time.Time `json:"endTime"`
+	UserID      string    `json:"userId"`
 }
 
 type UpdateEventRequest struct {
 	Title       string    `json:"title"`
 	Description string    `json:"description,omitempty"`
-	StartTime   time.Time `json:"start_time"`
-	EndTime     time.Time `json:"end_time"`
-	UserID      string    `json:"user_id"`
+	StartTime   time.Time `json:"startTime"`
+	EndTime     time.Time `json:"endTime"`
+	UserID      string    `json:"userId"`
 }
 
 type EventResponse struct {
 	ID          string    `json:"id"`
 	Title       string    `json:"title"`
 	Description string    `json:"description,omitempty"`
-	StartTime   time.Time `json:"start_time"`
-	EndTime     time.Time `json:"end_time"`
-	UserID      string    `json:"user_id"`
+	StartTime   time.Time `json:"startTime"`
+	EndTime     time.Time `json:"endTime"`
+	UserID      string    `json:"userId"`
 }
 
 type EventsListResponse struct {
-	Events []EventResponse `json:"events"`
+	Events []EventResponse
 }
 
 type ErrorResponse struct {
-	Error string `json:"error"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }
