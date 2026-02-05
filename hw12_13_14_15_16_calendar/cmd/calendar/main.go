@@ -10,6 +10,7 @@ import (
 	config "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/configs"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/logger"
+	internalgrpc "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/server/grpc"
 	internalhttp "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/server/http"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage"
 )
@@ -51,16 +52,26 @@ func run() (exitCode int) {
 
 	calendar := app.NewApp(logg, storage)
 
-	handler := internalhttp.NewHandler(logg, calendar)
+	logg.Info("calendar is starting...")
 
-	server := internalhttp.NewServer(logg, handler)
+	switch config.Server.Type {
+	case "grpc":
+		server := internalgrpc.NewServer(logg)
 
-	logg.Info("calendar is running...")
+		if err = server.Start(ctx, config.Server.Host, config.Server.Port, config.Server.Timeout); err != nil {
+			logg.Error("failed to start grpc server: %v", err)
+			cancel()
+			return 3
+		}
+	case "http":
+		handler := internalhttp.NewHandler(logg, calendar)
+		server := internalhttp.NewServer(logg, handler)
 
-	if err = server.Start(ctx, config.Server.Host, config.Server.Port, config.Server.Timeout); err != nil {
-		logg.Error("failed to start http server: %v", err)
-		cancel()
-		return 3
+		if err = server.Start(ctx, config.Server.Host, config.Server.Port, config.Server.Timeout); err != nil {
+			logg.Error("failed to start http server: %v", err)
+			cancel()
+			return 3
+		}
 	}
 
 	logg.Info("calendar has stoped running...")

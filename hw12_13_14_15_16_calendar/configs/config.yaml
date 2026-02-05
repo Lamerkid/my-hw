@@ -2,10 +2,11 @@ logger:
   level: "DEBUG"
 
 server:
+  type: "grpc"
   host: "127.0.0.1"
   port: "8080"
   timeOut: 30
 
-storage: 
+storage:
   type: "inMemory"
   dsn: "postgres://myuser:mypass@localhost:5432/mydb?sslmode=verify-full"

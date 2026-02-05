@@ -15,6 +15,7 @@ type Config struct {
 }
 
 type ServerConf struct {
+	Type    string        `yaml:"type"`
 	Host    string        `yaml:"host"`
 	Port    string        `yaml:"port"`
 	Timeout time.Duration `yaml:"timeout"`

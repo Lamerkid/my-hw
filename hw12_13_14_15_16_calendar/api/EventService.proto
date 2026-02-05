@@ -7,12 +7,12 @@ package event;
 option go_package = "./;internalgrpc";
 
 service EventService {
-    rpc CreateEvent (CreateEventRequest) returns (CreateEventResponse);
-    rpc UpdateEvent (UpdateEventRequest) returns (UpdateEventResponse);
-    rpc DeleteEvent (DeleteEventRequest) returns (DeleteEventResponse);
-    rpc SelectEventByDay (SelectEventByDayRequest) returns (SelectEventByDayResponse);
-    rpc SelectEventByWeek (SelectEventByWeekRequest) returns (SelectEventByWeekResponse);
-    rpc SelectEventByMonth (SelectEventByMonthRequest) returns (SelectEventByMonthResponse);
+    rpc CreateEvent (CreateEventRequest) returns (EventResponse);
+    rpc UpdateEvent (EventRequest) returns (EventResponse);
+    rpc DeleteEvent (EventRequest) returns (EventResponse);
+    rpc SelectEventByDay (SelectEventRequest) returns (ArrayEventResponse);
+    rpc SelectEventByWeek (SelectEventRequest) returns (ArrayEventResponse);
+    rpc SelectEventByMonth (SelectEventRequest) returns (ArrayEventResponse);
 }
 
 message Event {
@@ -28,46 +28,19 @@ message CreateEventRequest {
     Event event = 1;
 }
 
-message CreateEventResponse {
-    Event event = 1;
+message EventRequest {
+    string id = 1;
 }
 
-message UpdateEventRequest {
-    Event event = 1;
-}
-
-message UpdateEventResponse {
-    Event event = 1;
-}
-
-message DeleteEventRequest {
-    Event event = 1;
-}
-
-message DeleteEventResponse {
-    Event event = 1;
-}
-
-message SelectEventByDayRequest {
+message SelectEventRequest {
     google.protobuf.Timestamp date = 1;
+    string range = 2;
 }
 
-message SelectEventByDayResponse {
-    repeated Event events = 1;
+message EventResponse {
+    Event event = 1;
 }
 
-message SelectEventByWeekRequest {
-    google.protobuf.Timestamp date = 1;
-}
-
-message SelectEventByWeekResponse {
-    repeated Event events = 1;
-}
-
-message SelectEventByMonthRequest {
-    google.protobuf.Timestamp date = 1;
-}
-
-message SelectEventByMonthResponse {
-    repeated Event events = 1;
+message ArrayEventResponse {
+  repeated Event events = 1;
 }
