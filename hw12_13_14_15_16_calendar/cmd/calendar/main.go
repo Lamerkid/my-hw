@@ -56,7 +56,8 @@ func run() (exitCode int) {
 
 	switch config.Server.Type {
 	case "grpc":
-		server := internalgrpc.NewServer(logg)
+		service := internalgrpc.NewEventService(logg, calendar)
+		server := internalgrpc.NewServer(logg, service)
 
 		if err = server.Start(ctx, config.Server.Host, config.Server.Port, config.Server.Timeout); err != nil {
 			logg.Error("failed to start grpc server: %v", err)

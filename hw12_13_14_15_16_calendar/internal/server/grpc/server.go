@@ -6,17 +6,28 @@ import (
 	"time"
 
 	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type Server struct {
-	server UnimplementedEventServiceServer
 	logger Logger
 	grpc   *grpc.Server
 }
 
-func NewServer(logger Logger) *Server {
+func NewServer(logger Logger, service *Service) *Server {
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			UnaryServerRequestLoggerInterceptor(),
+		),
+	)
+
+	reflection.Register(grpcServer)
+
+	RegisterEventServiceServer(grpcServer, service)
+
 	return &Server{
 		logger: logger,
+		grpc:   grpcServer,
 	}
 }
 
@@ -26,49 +37,42 @@ func (s *Server) Start(ctx context.Context, host, port string, timeout time.Dura
 		return err
 	}
 
-	s.grpc = grpc.NewServer(
-		grpc.UnaryServerInterceptor(
-			UnaryServerRequestLoggerInterceptor,
-		),
-	)
-
-	RegisterEventServiceServer(s.grpc, &Server{})
-
 	s.logger.Info("starting server on %s", lsn.Addr().String())
 
-	if err := s.grpc.Serve(lsn); err != nil {
+	serverErr := make(chan error, 1)
+
+	go func() {
+		if err := s.grpc.Serve(lsn); err != nil {
+			serverErr <- err
+		} else {
+			serverErr <- nil
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		return s.Stop(shutdownCtx)
+
+	case err := <-serverErr:
 		return err
 	}
-
-	return nil
 }
 
-func (s *Server) CreateEvent(ctx context.Context, in *CreateEventRequest) (*EventResponse, error) {
-	s.logger.Debug("Creating event with id: %s", in.Event.GetId())
-	return s.server.CreateEvent(ctx, in)
-}
+func (s *Server) Stop(ctx context.Context) error {
+	done := make(chan struct{})
+	go func() {
+		s.grpc.GracefulStop()
+		close(done)
+	}()
 
-func (s *Server) UpdateEvent(ctx context.Context, in *EventRequest) (*EventResponse, error) {
-	s.logger.Debug("Updating event with id: %s", in.GetId())
-	return s.server.UpdateEvent(ctx, in)
-}
-
-func (s *Server) DeleteEvent(ctx context.Context, in *EventRequest) (*EventResponse, error) {
-	s.logger.Debug("Deleting event with id: %s", in.GetId())
-	return s.server.DeleteEvent(ctx, in)
-}
-
-func (s *Server) SelectEventByDay(ctx context.Context, in *SelectEventRequest) (*ArrayEventResponse, error) {
-	s.logger.Debug("Selecting events on date: %s, by range: %s", in.Date.String(), in.Range)
-	return s.server.SelectEventByDay(ctx, in)
-}
-
-func (s *Server) SelectEventByWeek(ctx context.Context, in *SelectEventRequest) (*ArrayEventResponse, error) {
-	s.logger.Debug("Selecting events on date: %s, by range: %s", in.Date.String(), in.Range)
-	return s.server.SelectEventByWeek(ctx, in)
-}
-
-func (s *Server) SelectEventByMonth(ctx context.Context, in *SelectEventRequest) (*ArrayEventResponse, error) {
-	s.logger.Debug("Selecting events on date: %s, by range: %s", in.Date.String(), in.Range)
-	return s.server.SelectEventByMonth(ctx, in)
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		s.grpc.Stop()
+		return ctx.Err()
+	}
 }

@@ -8,8 +8,8 @@ option go_package = "./;internalgrpc";
 
 service EventService {
     rpc CreateEvent (CreateEventRequest) returns (EventResponse);
-    rpc UpdateEvent (EventRequest) returns (EventResponse);
-    rpc DeleteEvent (EventRequest) returns (EventResponse);
+    rpc UpdateEvent (UpdateEventRequest) returns (EventResponse);
+    rpc DeleteEvent (EventIdRequest) returns (EventResponse);
     rpc SelectEventByDay (SelectEventRequest) returns (ArrayEventResponse);
     rpc SelectEventByWeek (SelectEventRequest) returns (ArrayEventResponse);
     rpc SelectEventByMonth (SelectEventRequest) returns (ArrayEventResponse);
@@ -25,16 +25,27 @@ message Event {
 }
 
 message CreateEventRequest {
-    Event event = 1;
+    string title = 1;
+    string description = 2;
+    google.protobuf.Timestamp start_time = 3;
+    google.protobuf.Timestamp end_time = 4;
+    string user_id = 5;
 }
 
-message EventRequest {
+message UpdateEventRequest {
+    string id = 1;
+    string title = 2;
+    string description = 3;
+    google.protobuf.Timestamp start_time = 4;
+    google.protobuf.Timestamp end_time = 5;
+}
+
+message EventIdRequest {
     string id = 1;
 }
 
 message SelectEventRequest {
     google.protobuf.Timestamp date = 1;
-    string range = 2;
 }
 
 message EventResponse {

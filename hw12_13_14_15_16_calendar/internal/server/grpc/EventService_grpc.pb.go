@@ -8,6 +8,7 @@ package internalgrpc
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -32,8 +33,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EventServiceClient interface {
 	CreateEvent(ctx context.Context, in *CreateEventRequest, opts ...grpc.CallOption) (*EventResponse, error)
-	UpdateEvent(ctx context.Context, in *EventRequest, opts ...grpc.CallOption) (*EventResponse, error)
-	DeleteEvent(ctx context.Context, in *EventRequest, opts ...grpc.CallOption) (*EventResponse, error)
+	UpdateEvent(ctx context.Context, in *UpdateEventRequest, opts ...grpc.CallOption) (*EventResponse, error)
+	DeleteEvent(ctx context.Context, in *EventIdRequest, opts ...grpc.CallOption) (*EventResponse, error)
 	SelectEventByDay(ctx context.Context, in *SelectEventRequest, opts ...grpc.CallOption) (*ArrayEventResponse, error)
 	SelectEventByWeek(ctx context.Context, in *SelectEventRequest, opts ...grpc.CallOption) (*ArrayEventResponse, error)
 	SelectEventByMonth(ctx context.Context, in *SelectEventRequest, opts ...grpc.CallOption) (*ArrayEventResponse, error)
@@ -57,7 +58,7 @@ func (c *eventServiceClient) CreateEvent(ctx context.Context, in *CreateEventReq
 	return out, nil
 }
 
-func (c *eventServiceClient) UpdateEvent(ctx context.Context, in *EventRequest, opts ...grpc.CallOption) (*EventResponse, error) {
+func (c *eventServiceClient) UpdateEvent(ctx context.Context, in *UpdateEventRequest, opts ...grpc.CallOption) (*EventResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(EventResponse)
 	err := c.cc.Invoke(ctx, EventService_UpdateEvent_FullMethodName, in, out, cOpts...)
@@ -67,7 +68,7 @@ func (c *eventServiceClient) UpdateEvent(ctx context.Context, in *EventRequest, 
 	return out, nil
 }
 
-func (c *eventServiceClient) DeleteEvent(ctx context.Context, in *EventRequest, opts ...grpc.CallOption) (*EventResponse, error) {
+func (c *eventServiceClient) DeleteEvent(ctx context.Context, in *EventIdRequest, opts ...grpc.CallOption) (*EventResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(EventResponse)
 	err := c.cc.Invoke(ctx, EventService_DeleteEvent_FullMethodName, in, out, cOpts...)
@@ -112,8 +113,8 @@ func (c *eventServiceClient) SelectEventByMonth(ctx context.Context, in *SelectE
 // for forward compatibility.
 type EventServiceServer interface {
 	CreateEvent(context.Context, *CreateEventRequest) (*EventResponse, error)
-	UpdateEvent(context.Context, *EventRequest) (*EventResponse, error)
-	DeleteEvent(context.Context, *EventRequest) (*EventResponse, error)
+	UpdateEvent(context.Context, *UpdateEventRequest) (*EventResponse, error)
+	DeleteEvent(context.Context, *EventIdRequest) (*EventResponse, error)
 	SelectEventByDay(context.Context, *SelectEventRequest) (*ArrayEventResponse, error)
 	SelectEventByWeek(context.Context, *SelectEventRequest) (*ArrayEventResponse, error)
 	SelectEventByMonth(context.Context, *SelectEventRequest) (*ArrayEventResponse, error)
@@ -130,18 +131,23 @@ type UnimplementedEventServiceServer struct{}
 func (UnimplementedEventServiceServer) CreateEvent(context.Context, *CreateEventRequest) (*EventResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateEvent not implemented")
 }
-func (UnimplementedEventServiceServer) UpdateEvent(context.Context, *EventRequest) (*EventResponse, error) {
+
+func (UnimplementedEventServiceServer) UpdateEvent(context.Context, *UpdateEventRequest) (*EventResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateEvent not implemented")
 }
-func (UnimplementedEventServiceServer) DeleteEvent(context.Context, *EventRequest) (*EventResponse, error) {
+
+func (UnimplementedEventServiceServer) DeleteEvent(context.Context, *EventIdRequest) (*EventResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteEvent not implemented")
 }
+
 func (UnimplementedEventServiceServer) SelectEventByDay(context.Context, *SelectEventRequest) (*ArrayEventResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SelectEventByDay not implemented")
 }
+
 func (UnimplementedEventServiceServer) SelectEventByWeek(context.Context, *SelectEventRequest) (*ArrayEventResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SelectEventByWeek not implemented")
 }
+
 func (UnimplementedEventServiceServer) SelectEventByMonth(context.Context, *SelectEventRequest) (*ArrayEventResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SelectEventByMonth not implemented")
 }
@@ -185,7 +191,7 @@ func _EventService_CreateEvent_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _EventService_UpdateEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EventRequest)
+	in := new(UpdateEventRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -197,13 +203,13 @@ func _EventService_UpdateEvent_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: EventService_UpdateEvent_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventServiceServer).UpdateEvent(ctx, req.(*EventRequest))
+		return srv.(EventServiceServer).UpdateEvent(ctx, req.(*UpdateEventRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _EventService_DeleteEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EventRequest)
+	in := new(EventIdRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -215,7 +221,7 @@ func _EventService_DeleteEvent_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: EventService_DeleteEvent_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventServiceServer).DeleteEvent(ctx, req.(*EventRequest))
+		return srv.(EventServiceServer).DeleteEvent(ctx, req.(*EventIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
