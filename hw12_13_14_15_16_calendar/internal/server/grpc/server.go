@@ -6,28 +6,20 @@ import (
 	"time"
 
 	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 )
 
 type Server struct {
-	logger Logger
-	grpc   *grpc.Server
+	logger  Logger
+	service *Service
+	grpc    *grpc.Server
 }
 
 func NewServer(logger Logger, service *Service) *Server {
-	grpcServer := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			UnaryServerRequestLoggerInterceptor(),
-		),
-	)
-
-	reflection.Register(grpcServer)
-
-	RegisterEventServiceServer(grpcServer, service)
-
 	return &Server{
-		logger: logger,
-		grpc:   grpcServer,
+		logger:  logger,
+		service: service,
 	}
 }
 
@@ -36,6 +28,19 @@ func (s *Server) Start(ctx context.Context, host, port string, timeout time.Dura
 	if err != nil {
 		return err
 	}
+
+	s.grpc = grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			UnaryServerRequestLoggerInterceptor(),
+		),
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			Timeout: timeout,
+		}),
+	)
+
+	reflection.Register(s.grpc)
+
+	RegisterEventServiceServer(s.grpc, s.service)
 
 	s.logger.Info("starting server on %s", lsn.Addr().String())
 

@@ -10,8 +10,7 @@ import (
 	config "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/configs"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/logger"
-	internalgrpc "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/server/grpc"
-	internalhttp "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/server/http"
+	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/server"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage"
 )
 
@@ -33,16 +32,16 @@ func run() (exitCode int) {
 		return 0
 	}
 
+	ctx, cancel := signal.NotifyContext(context.Background(),
+		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	defer cancel()
+
 	config, err := config.LoadConfig(configFile)
 	if err != nil {
 		return 1
 	}
 
 	logg := logger.NewLogger(config.Logger.Level)
-
-	ctx, cancel := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	defer cancel()
 
 	storage, err := storage.NewStorage(ctx, config)
 	if err != nil {
@@ -52,27 +51,17 @@ func run() (exitCode int) {
 
 	calendar := app.NewApp(logg, storage)
 
+	server, err := server.NewServer(config, logg, calendar)
+	if err != nil {
+		return 3
+	}
+
 	logg.Info("calendar is starting...")
 
-	switch config.Server.Type {
-	case "grpc":
-		service := internalgrpc.NewEventService(logg, calendar)
-		server := internalgrpc.NewServer(logg, service)
-
-		if err = server.Start(ctx, config.Server.Host, config.Server.Port, config.Server.Timeout); err != nil {
-			logg.Error("failed to start grpc server: %v", err)
-			cancel()
-			return 3
-		}
-	case "http":
-		handler := internalhttp.NewHandler(logg, calendar)
-		server := internalhttp.NewServer(logg, handler)
-
-		if err = server.Start(ctx, config.Server.Host, config.Server.Port, config.Server.Timeout); err != nil {
-			logg.Error("failed to start http server: %v", err)
-			cancel()
-			return 3
-		}
+	if err = server.Start(ctx, config.Server.Host, config.Server.Port, config.Server.Timeout); err != nil {
+		logg.Error("failed to start server: %v", err)
+		cancel()
+		return 4
 	}
 
 	logg.Info("calendar has stoped running...")

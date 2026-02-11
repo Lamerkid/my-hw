@@ -23,6 +23,8 @@ func NewServer(logger Logger, handler *Handler) *Server {
 func (s *Server) Start(ctx context.Context, host, port string, timeout time.Duration) error {
 	url := net.JoinHostPort(host, port)
 
+	s.logger.Info("starting server on %s", url)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hello", s.handler.Hello)
 	mux.HandleFunc("/api/v3/event", s.handler.CreateEvent)

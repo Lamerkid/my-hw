@@ -2,6 +2,7 @@ package internalgrpc
 
 import (
 	context "context"
+	"net"
 	"testing"
 	"time"
 
@@ -14,48 +15,56 @@ import (
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func TestGRPC_CreateEvent(t *testing.T) {
+func TestGRPCServer(t *testing.T) {
 	logg := logger.NewLogger("DEBUG")
 	storage := memorystorage.New()
 	calendar := app.NewApp(logg, storage)
 	service := NewEventService(logg, calendar)
-	srv := NewServer(logg, service)
+	grpcSrv := NewServer(logg, service)
+
+	ctx := context.Background()
+
+	host := "127.0.0.1"
+	port := "8081"
+	timeout := 30 * time.Second
 
 	go func() {
-		if err := srv.Start(context.Background(), "127.0.0.1", "8080", 30*time.Second); err != nil {
-			t.Logf("Server error: %v", err)
+		if err := grpcSrv.Start(ctx, host, port, timeout); err != nil {
+			t.Errorf("Server error: %v", err)
 		}
 	}()
+
 	time.Sleep(100 * time.Millisecond)
 
-	conn, err := grpc.NewClient("127.0.0.1:8080",
+	conn, err := grpc.NewClient(net.JoinHostPort(host, port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 	defer conn.Close()
 
 	client := NewEventServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	t.Run("CreateEvent", func(t *testing.T) {
+		resp, err := client.CreateEvent(ctx, &CreateEventRequest{
+			Title:       "Test Event",
+			Description: "Test Description",
+			StartTime:   timestamppb.New(time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC)),
+			EndTime:     timestamppb.New(time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)),
+			UserId:      "40ab8025-d98d-41ed-a151-b6a9ee23ccb3",
+		})
 
-	resp, err := client.CreateEvent(ctx, &CreateEventRequest{
-		Title:       "Test Event",
-		Description: "Test Description",
-		StartTime:   timestamppb.New(time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC)),
-		EndTime:     timestamppb.New(time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)),
-		UserId:      "40ab8025-d98d-41ed-a151-b6a9ee23ccb3",
+		require.NoError(t, err)
+		require.Equal(t, "Test Event", resp.GetEvent().GetTitle())
+		require.NotEmpty(t, resp.GetEvent().GetId())
 	})
 
-	require.NoError(t, err)
-	require.Equal(t, "Test Event", resp.GetEvent().GetTitle())
-	require.NotEmpty(t, resp.GetEvent().GetId())
+	t.Run("SelectEventByDay", func(t *testing.T) {
+		targetDate := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 
-	targetDate := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
+		arrayResp, err := client.SelectEventByDay(ctx, &SelectEventRequest{
+			Date: timestamppb.New(targetDate),
+		})
 
-	arrayResp, err := client.SelectEventByDay(ctx, &SelectEventRequest{
-		Date: timestamppb.New(targetDate),
+		require.NoError(t, err)
+		require.Len(t, arrayResp.GetEvents(), 1)
 	})
-
-	require.NoError(t, err)
-	require.Len(t, arrayResp.GetEvents(), 1)
 }
