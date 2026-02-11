@@ -42,7 +42,7 @@ func (s *Server) Start(ctx context.Context, host, port string, timeout time.Dura
 
 	RegisterEventServiceServer(s.grpc, s.service)
 
-	s.logger.Info("starting server on %s", lsn.Addr().String())
+	s.logger.Info("starting grpc server on %s", lsn.Addr().String())
 
 	serverErr := make(chan error, 1)
 
@@ -59,6 +59,7 @@ func (s *Server) Start(ctx context.Context, host, port string, timeout time.Dura
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
+		s.logger.Info("stopping grpc server on %s", lsn.Addr().String())
 		return s.Stop(shutdownCtx)
 
 	case err := <-serverErr:

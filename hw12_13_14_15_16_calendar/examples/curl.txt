@@ -16,3 +16,11 @@ curl "http://127.0.0.1:8080/api/v3/event/select?date=2006-01-02&range=day"
   "description": "celebration of event",
   "createdAt": "2006-01-02T15:04:05Z07:00"
 }
+
+grpcurl -plaintext -d '{
+  "title": "celebration",
+  "description": "celebration of event",
+  "startTime": "2006-01-02T15:04:05Z",
+  "endTime": "2006-02-02T15:04:05Z",
+  "userId": "314a4a09-35d2-42b7-984d-6b5bf4cee123"
+}' 127.0.0.1:8080 event.EventService/CreateEvent

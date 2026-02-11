@@ -23,7 +23,7 @@ func NewServer(logger Logger, handler *Handler) *Server {
 func (s *Server) Start(ctx context.Context, host, port string, timeout time.Duration) error {
 	url := net.JoinHostPort(host, port)
 
-	s.logger.Info("starting server on %s", url)
+	s.logger.Info("starting http server on %s", url)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hello", s.handler.Hello)
@@ -54,6 +54,7 @@ func (s *Server) Start(ctx context.Context, host, port string, timeout time.Dura
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
+		s.logger.Info("stopping http server on %s", url)
 		return s.Stop(shutdownCtx)
 
 	case err := <-serverErr:
@@ -62,8 +63,6 @@ func (s *Server) Start(ctx context.Context, host, port string, timeout time.Dura
 }
 
 func (s *Server) Stop(ctx context.Context) error {
-	s.logger.Info("Stopping server")
-
 	if s.http != nil {
 		s.http.SetKeepAlivesEnabled(false)
 		if err := s.http.Shutdown(ctx); err != nil {

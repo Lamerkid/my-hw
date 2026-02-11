@@ -53,7 +53,7 @@ func (h *Handler) EventHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) SelectEventHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		WriteJSONError(w, "Only GET method is allowed", http.StatusMethodNotAllowed)
+		WriteJSONError(w, "only GET method is allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -86,8 +86,9 @@ func (h *Handler) SelectEventHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
+	h.logger.Debug("got request CreateEvent")
 	if r.Method != http.MethodPost {
-		WriteJSONError(w, "Only GET method is allowed", http.StatusMethodNotAllowed)
+		WriteJSONError(w, "only GET method is allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -109,6 +110,7 @@ func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateEvent(w http.ResponseWriter, r *http.Request, req app.UpdateEventCommand) {
+	h.logger.Debug("got request UpdateEvent")
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		WriteJSONError(w, err.Error(), http.StatusBadRequest)
 		return
@@ -125,6 +127,7 @@ func (h *Handler) UpdateEvent(w http.ResponseWriter, r *http.Request, req app.Up
 }
 
 func (h *Handler) DeleteEvent(w http.ResponseWriter, r *http.Request, idStr string) {
+	h.logger.Debug("got request DeleteEvent")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		WriteJSONError(w, err.Error(), http.StatusBadRequest)
@@ -142,6 +145,7 @@ func (h *Handler) DeleteEvent(w http.ResponseWriter, r *http.Request, idStr stri
 }
 
 func (h *Handler) SelectEventByDay(w http.ResponseWriter, r *http.Request, date time.Time) {
+	h.logger.Debug("got request SelectEventByDay on date: %s", date.String())
 	events, err := h.app.SelectEventByDay(r.Context(), date)
 	if err != nil {
 		WriteJSONError(w, err.Error(), http.StatusInternalServerError)
@@ -150,12 +154,13 @@ func (h *Handler) SelectEventByDay(w http.ResponseWriter, r *http.Request, date 
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(events); err != nil {
-		h.logger.Error("Failed to encode response: %v", err)
-		WriteJSONError(w, "Internal server error", http.StatusInternalServerError)
+		h.logger.Error("failed to encode response: %v", err)
+		WriteJSONError(w, "internal server error", http.StatusInternalServerError)
 	}
 }
 
 func (h *Handler) SelectEventByWeek(w http.ResponseWriter, r *http.Request, date time.Time) {
+	h.logger.Debug("got request SelectEventByWeek on date: %s", date.String())
 	events, err := h.app.SelectEventByWeek(r.Context(), date)
 	if err != nil {
 		WriteJSONError(w, err.Error(), http.StatusBadRequest)
@@ -164,12 +169,13 @@ func (h *Handler) SelectEventByWeek(w http.ResponseWriter, r *http.Request, date
 
 	w.Header().Set("Contet-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(events); err != nil {
-		h.logger.Error("Failed to encode response: %v", err)
-		WriteJSONError(w, "Internal server error", http.StatusInternalServerError)
+		h.logger.Error("failed to encode response: %v", err)
+		WriteJSONError(w, "internal server error", http.StatusInternalServerError)
 	}
 }
 
 func (h *Handler) SelectEventByMonth(w http.ResponseWriter, r *http.Request, date time.Time) {
+	h.logger.Debug("got request SelectEventByMonth on date: %s", date.String())
 	events, err := h.app.SelectEventByMonth(r.Context(), date)
 	if err != nil {
 		WriteJSONError(w, err.Error(), http.StatusBadRequest)
@@ -179,7 +185,7 @@ func (h *Handler) SelectEventByMonth(w http.ResponseWriter, r *http.Request, dat
 	w.Header().Set("Contet-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(events); err != nil {
-		h.logger.Error("Failed to encode response: %v", err)
-		WriteJSONError(w, "Internal server error", http.StatusInternalServerError)
+		h.logger.Error("failed to encode response: %v", err)
+		WriteJSONError(w, "internal server error", http.StatusInternalServerError)
 	}
 }

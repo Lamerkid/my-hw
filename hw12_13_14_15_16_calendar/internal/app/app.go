@@ -21,7 +21,7 @@ func NewApp(logger Logger, storage Storage) *App {
 }
 
 func (a *App) CreateEvent(ctx context.Context, cmd CreateEventCommand) (domain.Event, error) {
-	a.logger.Debug("Creating event: %s", cmd.Title)
+	a.logger.Debug("creating event: %s", cmd.Title)
 
 	id, err := uuid.NewRandom()
 	if err != nil {
@@ -45,12 +45,12 @@ func (a *App) CreateEvent(ctx context.Context, cmd CreateEventCommand) (domain.E
 		return domain.Event{}, err
 	}
 
-	a.logger.Info("Created event with id: %s", event.ID)
+	a.logger.Info("created event with id: %s", event.ID)
 	return event, nil
 }
 
 func (a *App) UpdateEvent(ctx context.Context, cmd UpdateEventCommand) (domain.Event, error) {
-	a.logger.Debug("Updating event with id: %s", cmd.ID)
+	a.logger.Debug("updating event with id: %s", cmd.ID)
 
 	event := domain.Event{
 		ID:          cmd.ID,
@@ -68,12 +68,12 @@ func (a *App) UpdateEvent(ctx context.Context, cmd UpdateEventCommand) (domain.E
 		return domain.Event{}, err
 	}
 
-	a.logger.Info("Updated event with id: %s", event.ID)
+	a.logger.Info("updated event with id: %s", event.ID)
 	return event, nil
 }
 
 func (a *App) DeleteEvent(ctx context.Context, id uuid.UUID) (domain.Event, error) {
-	a.logger.Debug("Deleting event with id: %s", id)
+	a.logger.Debug("deleting event with id: %s", id)
 
 	appCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -88,23 +88,26 @@ func (a *App) DeleteEvent(ctx context.Context, id uuid.UUID) (domain.Event, erro
 		return domain.Event{}, err
 	}
 
-	a.logger.Info("Deleted event with id: %s", id)
+	a.logger.Info("deleted event with id: %s", id)
 	return event, nil
 }
 
 func (a *App) SelectEventByDay(ctx context.Context, date time.Time) ([]domain.Event, error) {
+	a.logger.Info("selecting event by day from: %s", date.String())
 	appCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	return a.storage.EventsByDay(appCtx, date.Format(time.DateOnly))
 }
 
 func (a *App) SelectEventByWeek(ctx context.Context, date time.Time) ([]domain.Event, error) {
+	a.logger.Info("selecting event by week from: %s", date.String())
 	appCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	return a.storage.EventsByWeek(appCtx, date.Format(time.DateOnly))
 }
 
 func (a *App) SelectEventByMonth(ctx context.Context, date time.Time) ([]domain.Event, error) {
+	a.logger.Info("selecting event by week from: %s", date.String())
 	appCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	return a.storage.EventsByMonth(appCtx, date.Format(time.DateOnly))

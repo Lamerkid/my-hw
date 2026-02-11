@@ -24,12 +24,12 @@ func NewEventService(logger Logger, app app.EventService) *Service {
 }
 
 func (s *Service) CreateEvent(ctx context.Context, in *CreateEventRequest) (*EventResponse, error) {
-	s.logger.Debug("Creating event")
+	s.logger.Debug("got request CreateEvent")
 
 	parsedUserID, err := uuid.Parse(in.UserId)
 	if err != nil {
-		s.logger.Error("Failed to parse UserID")
-		return nil, status.Errorf(codes.Internal, "Failed to create event: %v", err)
+		s.logger.Error("failed to parse UserID")
+		return nil, status.Errorf(codes.Internal, "failed to create event: %v", err)
 	}
 
 	cmd := app.CreateEventCommand{
@@ -42,8 +42,8 @@ func (s *Service) CreateEvent(ctx context.Context, in *CreateEventRequest) (*Eve
 
 	event, err := s.app.CreateEvent(ctx, cmd)
 	if err != nil {
-		s.logger.Error("Failed to create event")
-		return nil, status.Errorf(codes.Internal, "Failed to create event: %v", err)
+		s.logger.Error("failed to create event")
+		return nil, status.Errorf(codes.Internal, "failed to create event: %v", err)
 	}
 
 	resp := &EventResponse{
@@ -61,12 +61,12 @@ func (s *Service) CreateEvent(ctx context.Context, in *CreateEventRequest) (*Eve
 }
 
 func (s *Service) UpdateEvent(ctx context.Context, in *UpdateEventRequest) (*EventResponse, error) {
-	s.logger.Debug("Updating event with id: %s", in.GetId())
+	s.logger.Debug("got request UpdateEvent on event with id: %s", in.GetId())
 
 	parsedID, err := uuid.Parse(in.GetId())
 	if err != nil {
-		s.logger.Error("Failed to parse UserID")
-		return nil, status.Errorf(codes.Internal, "Failed to create event: %v", err)
+		s.logger.Error("failed to parse UserID")
+		return nil, status.Errorf(codes.Internal, "failed to create event: %v", err)
 	}
 
 	cmd := app.UpdateEventCommand{
@@ -79,8 +79,8 @@ func (s *Service) UpdateEvent(ctx context.Context, in *UpdateEventRequest) (*Eve
 
 	event, err := s.app.UpdateEvent(ctx, cmd)
 	if err != nil {
-		s.logger.Error("Failed to update event")
-		return nil, status.Errorf(codes.Internal, "Failed to update event: %v", err)
+		s.logger.Error("failed to update event")
+		return nil, status.Errorf(codes.Internal, "failed to update event: %v", err)
 	}
 
 	resp := &EventResponse{
@@ -98,18 +98,18 @@ func (s *Service) UpdateEvent(ctx context.Context, in *UpdateEventRequest) (*Eve
 }
 
 func (s *Service) DeleteEvent(ctx context.Context, in *EventIdRequest) (*EventResponse, error) {
-	s.logger.Debug("Deleting event with id: %s", in.GetId())
+	s.logger.Debug("got request DeleteEvent on event with id: %s", in.GetId())
 
 	parsedID, err := uuid.Parse(in.GetId())
 	if err != nil {
-		s.logger.Error("Failed to parse UserID")
-		return nil, status.Errorf(codes.Internal, "Failed to create event: %v", err)
+		s.logger.Error("failed to parse UserID")
+		return nil, status.Errorf(codes.Internal, "failed to create event: %v", err)
 	}
 
 	event, err := s.app.DeleteEvent(ctx, parsedID)
 	if err != nil {
-		s.logger.Error("Failed to update event")
-		return nil, status.Errorf(codes.Internal, "Failed to update event: %v", err)
+		s.logger.Error("failed to update event")
+		return nil, status.Errorf(codes.Internal, "failed to update event: %v", err)
 	}
 
 	resp := &EventResponse{
@@ -127,12 +127,12 @@ func (s *Service) DeleteEvent(ctx context.Context, in *EventIdRequest) (*EventRe
 }
 
 func (s *Service) SelectEventByDay(ctx context.Context, in *SelectEventRequest) (*ArrayEventResponse, error) {
-	s.logger.Debug("Selecting events on date: %s, by day", in.Date.AsTime())
+	s.logger.Debug("got request SelectEventByDay on date: %s, by week", in.Date.AsTime())
 
 	events, err := s.app.SelectEventByDay(ctx, in.Date.AsTime())
 	if err != nil {
-		s.logger.Error("Failed to select events")
-		return nil, status.Errorf(codes.Internal, "Failed to create event: %v", err)
+		s.logger.Error("failed to select events")
+		return nil, status.Errorf(codes.Internal, "failed to create event: %v", err)
 	}
 
 	pbEvents := make([]*Event, len(events))
@@ -145,12 +145,12 @@ func (s *Service) SelectEventByDay(ctx context.Context, in *SelectEventRequest) 
 }
 
 func (s *Service) SelectEventByWeek(ctx context.Context, in *SelectEventRequest) (*ArrayEventResponse, error) {
-	s.logger.Debug("Selecting events on date: %s, by week", in.Date.AsTime())
+	s.logger.Debug("got request SelectEventByWeek on date: %s, by week", in.Date.AsTime())
 
 	events, err := s.app.SelectEventByWeek(ctx, in.Date.AsTime())
 	if err != nil {
-		s.logger.Error("Failed to select events")
-		return nil, status.Errorf(codes.Internal, "Failed to create event: %v", err)
+		s.logger.Error("failed to select events")
+		return nil, status.Errorf(codes.Internal, "failed to create event: %v", err)
 	}
 
 	pbEvents := make([]*Event, len(events))
@@ -163,12 +163,12 @@ func (s *Service) SelectEventByWeek(ctx context.Context, in *SelectEventRequest)
 }
 
 func (s *Service) SelectEventByMonth(ctx context.Context, in *SelectEventRequest) (*ArrayEventResponse, error) {
-	s.logger.Debug("Selecting events on date: %s, by month", in.Date.AsTime())
+	s.logger.Debug("got request SelectEventByMonth on date: %s, by month", in.Date.AsTime())
 
 	events, err := s.app.SelectEventByMonth(ctx, in.Date.AsTime())
 	if err != nil {
-		s.logger.Error("Failed to select events")
-		return nil, status.Errorf(codes.Internal, "Failed to create event: %v", err)
+		s.logger.Error("failed to select events")
+		return nil, status.Errorf(codes.Internal, "failed to create event: %v", err)
 	}
 
 	pbEvents := make([]*Event, len(events))
