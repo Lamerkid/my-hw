@@ -20,6 +20,7 @@ linters-settings:
           - github.com/lamerkid/my-hw
           - github.com/google/uuid
           - github.com/jackc/pgx/v4/stdlib
+          - github.com/rabbitmq/amqp091-go
       Test:
         files:
           - $test
@@ -28,6 +29,7 @@ linters-settings:
           - github.com/stretchr/testify
           - github.com/lamerkid/my-hw
           - github.com/google/uuid
+          - github.com/rabbitmq/amqp091-go
 issues:
   exclude-rules:
     - path: _test\.go
