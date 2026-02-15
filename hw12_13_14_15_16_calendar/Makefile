@@ -1,4 +1,7 @@
-BIN := "./bin/calendar"
+BIN_CALENDAR := "./bin/calendar"
+BIN_SCHEDULER := "./bin/scheduler"
+BIN_SENDER := "./bin/sender"
+
 DOCKER_IMG="calendar:develop"
 
 GIT_HASH := $(shell git log --format="%h" -n 1)
@@ -39,11 +42,19 @@ run-rabbit:
 generate:
 	protoc --go_out=./internal/server/grpc --go-grpc_out=./internal/server/grpc ./api/*.proto  
 
-build:
+build-calendar:
 	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar
 
+build-scheduler:
+	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/scheduler
+
+build-sender:
+	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/sender
+
+build: build-calendar build-scheduler build-sender
+
 run: build
-	$(BIN) -config ./configs/config.yaml
+	$(BIN) -config ./configs/calendar_config.yaml
 
 build-img:
 	docker build \

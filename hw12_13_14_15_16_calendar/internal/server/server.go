@@ -24,7 +24,7 @@ type Server interface {
 }
 
 func NewServer(cfg config.Config, logg *logger.Logger, app *app.App) (Server, error) {
-	switch cfg.Server.Type {
+	switch cfg.Calendar.Server.Type {
 	case "grpc":
 		service := internalgrpc.NewEventService(logg, app)
 		server := internalgrpc.NewServer(logg, service)
@@ -38,6 +38,6 @@ func NewServer(cfg config.Config, logg *logger.Logger, app *app.App) (Server, er
 		return server, nil
 
 	default:
-		return nil, fmt.Errorf("unknown server type: %s", cfg.Storage.Type)
+		return nil, fmt.Errorf("unknown server type: %s", cfg.Calendar.Storage.Type)
 	}
 }

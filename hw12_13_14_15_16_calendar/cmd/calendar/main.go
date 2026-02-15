@@ -17,7 +17,7 @@ import (
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.yaml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "/etc/calendar/calendar_config.yaml", "Path to configuration file")
 }
 
 func main() {
@@ -41,7 +41,7 @@ func run() (exitCode int) {
 		return 1
 	}
 
-	logg := logger.NewLogger(config.Logger.Level)
+	logg := logger.NewLogger(config.Calendar.Logger.Level)
 
 	storage, err := storage.NewStorage(ctx, config)
 	if err != nil {
@@ -58,7 +58,11 @@ func run() (exitCode int) {
 
 	logg.Info("calendar is starting...")
 
-	if err = server.Start(ctx, config.Server.Host, config.Server.Port, config.Server.Timeout); err != nil {
+	if err = server.Start(ctx,
+		config.Calendar.Server.Host,
+		config.Calendar.Server.Port,
+		config.Calendar.Server.Timeout,
+	); err != nil {
 		logg.Error("failed to start server: %v", err)
 		cancel()
 		return 4

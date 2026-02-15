@@ -30,18 +30,18 @@ type Storage interface {
 }
 
 func NewStorage(ctx context.Context, cfg config.Config) (Storage, error) {
-	switch cfg.Storage.Type {
+	switch cfg.Calendar.Storage.Type {
 	case "inMemory":
 		return memorystorage.New(), nil
 	case "postgres":
 		s := sqlstorage.New()
-		if err := s.Connect(ctx, cfg.Storage.DSN); err != nil {
+		if err := s.Connect(ctx, cfg.Calendar.Storage.DSN); err != nil {
 			return nil, fmt.Errorf("connect to postgres: %w", err)
 		}
 
 		return s, nil
 
 	default:
-		return nil, fmt.Errorf("unknown storage type: %s", cfg.Storage.Type)
+		return nil, fmt.Errorf("unknown storage type: %s", cfg.Calendar.Storage.Type)
 	}
 }
