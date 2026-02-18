@@ -33,15 +33,8 @@ func TestSender(t *testing.T) {
 
 	storage.Write(ctx, event1)
 
-	notification := rmq.Notification{
-		EventID:    event1.ID,
-		EventTitle: event1.Title,
-		EventTime:  event1.StartTime,
-		UserID:     event1.UserID,
-	}
-
 	go func() {
-		if err := sender.SendMessage(ctx, notification); err != nil {
+		if err := sender.Start(ctx); err != nil {
 			t.Errorf("Scheduler error: %v", err)
 		}
 	}()

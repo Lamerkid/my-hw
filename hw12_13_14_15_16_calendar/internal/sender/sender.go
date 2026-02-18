@@ -19,15 +19,16 @@ func NewSender(logger Logger, consumer rmq.Consumer) *Sender {
 	}
 }
 
-func (s *Sender) SendMessage(ctx context.Context, msg rmq.Notification) error {
-	s.logger.Debug("sending notification to: %s", msg.UserID)
+func (s *Sender) Start(ctx context.Context) error {
+	s.logger.Info("sender servise starting")
 
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-		s.logger.Info("Notification to %s on upcoming event: %s, on %s", msg.UserID, msg.EventTitle, msg.EventTime.String())
+	consumeHandler := rmq.MessageHandler(func(ctx context.Context, data []byte) error {
+		return s.handler.Handle(ctx, data)
+	})
+
+	if err := s.consumer.Consume(ctx, consumeHandler); err != nil {
+		s.logger.Error("consumer stopped: %v", err)
 	}
 
-	return s.consumer.Consume(ctx, s.handler)
+	return nil
 }

@@ -1,7 +1,9 @@
 BIN_CALENDAR := "./bin/calendar"
 BIN_SCHEDULER := "./bin/scheduler"
 BIN_SENDER := "./bin/sender"
-
+CALENDAR_CONFIG := "./configs/calendar_config.yaml"
+SCHEDULER_CONFIG := "./configs/scheduler_config.yaml"
+SENDER_CONFIG := "./configs/sender_config.yaml"
 DOCKER_IMG="calendar:develop"
 
 GIT_HASH := $(shell git log --format="%h" -n 1)
@@ -40,21 +42,34 @@ run-rabbit:
 	rabbitmq:management
 
 generate:
-	protoc --go_out=./internal/server/grpc --go-grpc_out=./internal/server/grpc ./api/*.proto  
+	protoc --go_out=./internal/server/grpc --go-grpc_out=./internal/server/grpc ./api/*.proto
 
 build-calendar:
-	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar
+	go build -v -o $(BIN_CALENDAR) -ldflags "$(LDFLAGS)" ./cmd/calendar
 
 build-scheduler:
-	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/scheduler
+	go build -v -o $(BIN_SCHEDULER) -ldflags "$(LDFLAGS)" ./cmd/scheduler
 
 build-sender:
-	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/sender
+	go build -v -o $(BIN_SENDER) -ldflags "$(LDFLAGS)" ./cmd/sender
 
 build: build-calendar build-scheduler build-sender
 
-run: build
-	$(BIN) -config ./configs/calendar_config.yaml
+run-calendar:
+	$(BIN_CALENDAR) -config ./configs/calendar_config.yaml
+
+run-scheduler:
+	$(BIN_SCHEDULER) -config ./configs/scheduler_config.yaml
+
+run-sender:
+	$(BIN_SENDER) -config ./configs/sender_config.yaml
+
+run:
+	@echo "Starting all services..."
+	$(BIN_CALENDAR) --config $(CALENDAR_CONFIG) &
+	$(BIN_SCHEDULER) --config $(SCHEDULER_CONFIG) &
+	$(BIN_SENDER) --config $(SENDER_CONFIG) &
+	@echo "All services started in background. PID: $$!"
 
 build-img:
 	docker build \

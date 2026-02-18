@@ -27,7 +27,7 @@ func TestScheduler(t *testing.T) {
 	logg := logger.NewLogger("DEBUG")
 	brocker := rmq.NewMockBroker()
 	storage := memorystorage.New()
-	scheduler := NewScheduler(logg, brocker, storage, 500*time.Millisecond)
+	scheduler := NewScheduler(logg, brocker, storage, "500ms")
 
 	ctx := context.Background()
 

@@ -9,9 +9,9 @@ import (
 )
 
 type Config struct {
-	Calendar  CalendarConfig
-	Scheduler SchedulerConfig
-	Sender    SenderConfig
+	Calendar  CalendarConfig  `yaml:"calendar"`
+	Scheduler SchedulerConfig `yaml:"scheduler"`
+	Sender    SenderConfig    `yaml:"sender"`
 }
 
 type CalendarConfig struct {
@@ -21,9 +21,10 @@ type CalendarConfig struct {
 }
 
 type SchedulerConfig struct {
-	AMQP    AMQPConf    `yaml:"amqp"`
-	Logger  LoggerConf  `yaml:"logger"`
-	Storage StorageConf `yaml:"storage"`
+	AMQP     AMQPConf    `yaml:"amqp"`
+	Logger   LoggerConf  `yaml:"logger"`
+	Storage  StorageConf `yaml:"storage"`
+	Interval string      `yaml:"interval"`
 }
 
 type SenderConfig struct {
@@ -55,25 +56,43 @@ type StorageConf struct {
 
 func LoadConfig(path string) (Config, error) {
 	var config Config
-	confFile, err := os.Open(path)
+
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return Config{}, err
 	}
-	defer confFile.Close()
 
-	decoder := yaml.NewDecoder(confFile)
-	if err = decoder.Decode(&config); err != nil {
+	var root map[string]any
+	if err := yaml.Unmarshal(data, &root); err != nil {
 		return Config{}, err
 	}
 
-	if err = config.validateFields(); err != nil {
+	if err = yaml.Unmarshal(data, &config); err != nil {
 		return Config{}, err
+	}
+
+	if _, ok := root["calendar"]; ok {
+		if err = config.validateCalendarFields(); err != nil {
+			return Config{}, err
+		}
+	}
+
+	if _, ok := root["scheduler"]; ok {
+		if err = config.validateSchedulerFields(); err != nil {
+			return Config{}, err
+		}
+	}
+
+	if _, ok := root["sender"]; ok {
+		if err = config.validateSenderFields(); err != nil {
+			return Config{}, err
+		}
 	}
 
 	return config, nil
 }
 
-func (c *Config) validateFields() error {
+func (c *Config) validateCalendarFields() error {
 	if c.Calendar.Server.Port == "" {
 		return fmt.Errorf("port is not specified")
 	}
@@ -87,10 +106,22 @@ func (c *Config) validateFields() error {
 		c.Calendar.Server.Timeout = 30 * time.Second
 	}
 
+	return nil
+}
+
+func (c *Config) validateSchedulerFields() error {
 	if c.Scheduler.AMQP.URL == "" {
 		return fmt.Errorf("amqp url is not specified for scheduler")
 	}
 
+	if c.Scheduler.Interval == "" {
+		c.Scheduler.Interval = "15m"
+	}
+
+	return nil
+}
+
+func (c *Config) validateSenderFields() error {
 	if c.Sender.AMQP.URL == "" {
 		return fmt.Errorf("amqp url is not specified for sender")
 	}

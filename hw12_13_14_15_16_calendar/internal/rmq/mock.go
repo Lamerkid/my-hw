@@ -39,7 +39,7 @@ func (m *MockBroker) Consume(ctx context.Context, handler MessageHandler) error 
 				return
 			default:
 				data, _ := json.Marshal(m.Messages[i])
-				handler.Handle(ctx, data)
+				handler(ctx, data)
 			}
 		}
 	}()

@@ -11,10 +11,10 @@ type Scheduler struct {
 	storage  Storage
 	producer rmq.Producer
 	logger   Logger
-	interval time.Duration
+	interval string
 }
 
-func NewScheduler(logg Logger, producer rmq.Producer, storage Storage, interval time.Duration) *Scheduler {
+func NewScheduler(logg Logger, producer rmq.Producer, storage Storage, interval string) *Scheduler {
 	return &Scheduler{
 		storage:  storage,
 		producer: producer,
@@ -25,7 +25,13 @@ func NewScheduler(logg Logger, producer rmq.Producer, storage Storage, interval 
 
 func (s *Scheduler) Start(ctx context.Context) error {
 	s.logger.Info("startin scheduler...")
-	ticker := time.NewTicker(s.interval)
+
+	schedInteval, err := time.ParseDuration(s.interval)
+	if err != nil {
+		return err
+	}
+
+	ticker := time.NewTicker(schedInteval)
 	defer ticker.Stop()
 
 	for {

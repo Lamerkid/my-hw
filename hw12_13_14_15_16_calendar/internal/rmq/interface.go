@@ -9,9 +9,7 @@ type Logger interface {
 	Error(msg string, args ...any)
 }
 
-type MessageHandler interface {
-	Handle(ctx context.Context, msg []byte) error
-}
+type MessageHandler func(ctx context.Context, msg []byte) error
 
 type Producer interface {
 	Publish(ctx context.Context, msg Notification) error

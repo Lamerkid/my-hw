@@ -133,7 +133,7 @@ func (a *AMQP) Consume(ctx context.Context, handler MessageHandler) error {
 
 			a.logger.Debug("received message: %s", amqpMsg.Body)
 
-			if err := handler.Handle(ctx, amqpMsg.Body); err != nil {
+			if err := handler(ctx, amqpMsg.Body); err != nil {
 				a.logger.Error("failed to handle message: %v", err)
 				continue
 			}

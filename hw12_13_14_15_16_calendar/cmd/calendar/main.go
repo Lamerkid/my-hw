@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -38,21 +39,25 @@ func run() (exitCode int) {
 
 	config, err := config.LoadConfig(configFile)
 	if err != nil {
+		fmt.Println(err)
 		return 1
 	}
 
 	logg := logger.NewLogger(config.Calendar.Logger.Level)
 
-	storage, err := storage.NewStorage(ctx, config)
+	storage, err := storage.NewStorage(ctx, config.Calendar.Storage.Type,
+		config.Calendar.Storage.DSN)
 	if err != nil {
+		logg.Error("failed to create storage: %v", err)
 		return 2
 	}
 	defer storage.Close()
 
 	calendar := app.NewApp(logg, storage)
 
-	server, err := server.NewServer(config, logg, calendar)
+	server, err := server.NewServer(logg, calendar, config.Calendar.Server.Type)
 	if err != nil {
+		logg.Error("failed to create server: %v", err)
 		return 3
 	}
 
@@ -68,6 +73,6 @@ func run() (exitCode int) {
 		return 4
 	}
 
-	logg.Info("calendar has stoped running...")
+	logg.Info("calendar has stopped running...")
 	return 0
 }
