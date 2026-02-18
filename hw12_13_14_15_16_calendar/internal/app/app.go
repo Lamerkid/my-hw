@@ -28,13 +28,19 @@ func (a *App) CreateEvent(ctx context.Context, cmd CreateEventCommand) (domain.E
 		return domain.Event{}, err
 	}
 
+	notifyBefore, err := time.ParseDuration(cmd.NotifyBefore)
+	if err != nil {
+		return domain.Event{}, err
+	}
+
 	event := domain.Event{
-		ID:          id,
-		Title:       cmd.Title,
-		Description: cmd.Description,
-		StartTime:   cmd.StartTime,
-		EndTime:     cmd.EndTime,
-		UserID:      cmd.UserID,
+		ID:           id,
+		Title:        cmd.Title,
+		Description:  cmd.Description,
+		StartTime:    cmd.StartTime,
+		EndTime:      cmd.EndTime,
+		UserID:       cmd.UserID,
+		NotifyBefore: notifyBefore,
 	}
 
 	appCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -52,19 +58,24 @@ func (a *App) CreateEvent(ctx context.Context, cmd CreateEventCommand) (domain.E
 func (a *App) UpdateEvent(ctx context.Context, cmd UpdateEventCommand) (domain.Event, error) {
 	a.logger.Debug("updating event with id: %s", cmd.ID)
 
+	notifyBefore, err := time.ParseDuration(cmd.NotifyBefore)
+	if err != nil {
+		return domain.Event{}, err
+	}
+
 	event := domain.Event{
-		ID:          cmd.ID,
-		Title:       cmd.Title,
-		Description: cmd.Description,
-		StartTime:   cmd.StartTime,
-		EndTime:     cmd.EndTime,
+		ID:           cmd.ID,
+		Title:        cmd.Title,
+		Description:  cmd.Description,
+		StartTime:    cmd.StartTime,
+		EndTime:      cmd.EndTime,
+		NotifyBefore: notifyBefore,
 	}
 
 	appCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	err := a.storage.Update(appCtx, event)
-	if err != nil {
+	if err := a.storage.Update(appCtx, event); err != nil {
 		return domain.Event{}, err
 	}
 

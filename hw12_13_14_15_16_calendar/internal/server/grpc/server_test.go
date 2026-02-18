@@ -45,11 +45,12 @@ func TestGRPCServer(t *testing.T) {
 
 	t.Run("CreateEvent", func(t *testing.T) {
 		resp, err := client.CreateEvent(ctx, &CreateEventRequest{
-			Title:       "Test Event",
-			Description: "Test Description",
-			StartTime:   timestamppb.New(time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC)),
-			EndTime:     timestamppb.New(time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)),
-			UserId:      "40ab8025-d98d-41ed-a151-b6a9ee23ccb3",
+			Title:        "Test Event",
+			Description:  "Test Description",
+			StartTime:    timestamppb.New(time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC)),
+			EndTime:      timestamppb.New(time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)),
+			UserId:       "40ab8025-d98d-41ed-a151-b6a9ee23ccb3",
+			NotifyBefore: "15m",
 		})
 
 		require.NoError(t, err)

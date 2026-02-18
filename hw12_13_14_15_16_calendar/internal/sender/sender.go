@@ -8,16 +8,26 @@ import (
 
 type Sender struct {
 	consumer rmq.Consumer
+	handler  *MessageHandler
 	logger   Logger
 }
 
-func NewSender(consumer rmq.Consumer, logger Logger) *Sender {
+func NewSender(logger Logger, consumer rmq.Consumer) *Sender {
 	return &Sender{
 		consumer: consumer,
 		logger:   logger,
 	}
 }
 
-func (s *Sender) Send(ctx context.Context, msg rmq.Notification) error {
-	return nil
+func (s *Sender) SendMessage(ctx context.Context, msg rmq.Notification) error {
+	s.logger.Debug("sending notification to: %s", msg.UserID)
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		s.logger.Info("Notification to %s on upcoming event: %s, on %s", msg.UserID, msg.EventTitle, msg.EventTime.String())
+	}
+
+	return s.consumer.Consume(ctx, s.handler)
 }

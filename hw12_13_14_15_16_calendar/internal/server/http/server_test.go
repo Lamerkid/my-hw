@@ -54,11 +54,12 @@ func TestHTTPServer(t *testing.T) {
 
 	t.Run("Create event", func(t *testing.T) {
 		data := map[string]any{
-			"title":       "Test Event",
-			"description": "Test Description",
-			"startTime":   time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC),
-			"endTime":     time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC),
-			"userId":      "40ab8025-d98d-41ed-a151-b6a9ee23ccb3",
+			"title":        "Test Event",
+			"description":  "Test Description",
+			"startTime":    time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC),
+			"endTime":      time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC),
+			"userId":       "40ab8025-d98d-41ed-a151-b6a9ee23ccb3",
+			"notifyBefore": "15m",
 		}
 
 		jsonData, err := json.Marshal(data)
@@ -77,7 +78,7 @@ func TestHTTPServer(t *testing.T) {
 
 		bodyBytes, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
-		require.Contains(t, string(bodyBytes), "title")
+		require.Contains(t, string(bodyBytes), "Title")
 		require.Equal(t, http.StatusOK, resp.StatusCode)
 	})
 
@@ -93,7 +94,7 @@ func TestHTTPServer(t *testing.T) {
 
 		bodyBytes, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
-		require.Contains(t, string(bodyBytes), "title")
+		require.Contains(t, string(bodyBytes), "Title")
 		require.Equal(t, http.StatusOK, resp.StatusCode)
 	})
 }

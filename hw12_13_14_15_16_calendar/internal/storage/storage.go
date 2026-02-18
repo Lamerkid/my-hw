@@ -27,6 +27,8 @@ type Storage interface {
 	EventsByDay(ctx context.Context, date string) ([]domain.Event, error)
 	EventsByWeek(ctx context.Context, date string) ([]domain.Event, error)
 	EventsByMonth(ctx context.Context, date string) ([]domain.Event, error)
+	EventsForNotification(ctx context.Context) ([]domain.Event, error)
+	MarkNotified(ctx context.Context, id uuid.UUID) error
 }
 
 func NewStorage(ctx context.Context, cfg config.Config) (Storage, error) {

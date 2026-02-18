@@ -149,11 +149,11 @@ components:
         $ref: "#/components/schemas/Event"
     Event:
       required:
-        - event_id
+        - eventId
         - title
       type: object
       properties:
-        event_id:
+        eventId:
           type: string
           example: 314a4a09-35d2-42b7-984d-6b5bf4cee649
         title:
@@ -162,9 +162,12 @@ components:
         description:
           type: string
           example: celebration of event
-        created_at:
+        createdAt:
           type: string
           example: 2006-01-02T15:04:05Z07:00
+        notifyBefore:
+          type: string
+          example: 15m
     Error:
       type: object
       properties:

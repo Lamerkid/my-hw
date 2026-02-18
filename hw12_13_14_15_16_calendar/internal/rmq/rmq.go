@@ -3,6 +3,7 @@ package rmq
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -23,8 +24,7 @@ func NewAMQP(logger Logger, url string, topicName string) *AMQP {
 	}
 }
 
-func (a *AMQP) Connect() error {
-	var err error
+func (a *AMQP) Connect() (err error) {
 	a.conn, err = amqp.Dial(a.url)
 	if err != nil {
 		return err
@@ -32,6 +32,7 @@ func (a *AMQP) Connect() error {
 
 	a.ch, err = a.conn.Channel()
 	if err != nil {
+		a.conn.Close()
 		return err
 	}
 
@@ -45,6 +46,32 @@ func (a *AMQP) Connect() error {
 		nil,
 	)
 	if err != nil {
+		a.conn.Close()
+		return err
+	}
+
+	queue, err := a.ch.QueueDeclare(
+		a.topicName,
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		a.conn.Close()
+		return err
+	}
+
+	err = a.ch.QueueBind(
+		queue.Name,
+		"#",
+		a.topicName,
+		false,
+		nil,
+	)
+	if err != nil {
+		a.conn.Close()
 		return err
 	}
 
@@ -68,20 +95,21 @@ func (a *AMQP) Publish(ctx context.Context, msg Notification) error {
 	}
 
 	return a.ch.PublishWithContext(ctx,
-		"",
 		a.topicName,
+		"notification",
 		false,
 		false,
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,
+			Timestamp:   time.Now(),
 		},
 	)
 }
 
-func (a *AMQP) Consume(ctx context.Context) error {
+func (a *AMQP) Consume(ctx context.Context, handler MessageHandler) error {
 	msgs, err := a.ch.Consume(
-		"test",
+		a.topicName,
 		"",
 		true,
 		false,
@@ -105,10 +133,9 @@ func (a *AMQP) Consume(ctx context.Context) error {
 
 			a.logger.Debug("received message: %s", amqpMsg.Body)
 
-			var msg string
-			if err := json.Unmarshal(amqpMsg.Body, &msg); err != nil {
-				a.logger.Error("error unmarshaling: %s", amqpMsg.Body)
-				return err
+			if err := handler.Handle(ctx, amqpMsg.Body); err != nil {
+				a.logger.Error("failed to handle message: %v", err)
+				continue
 			}
 		}
 	}
