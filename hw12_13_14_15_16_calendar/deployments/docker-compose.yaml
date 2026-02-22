@@ -65,7 +65,7 @@ services:
       context: ..
       dockerfile: build/Dockerfile.calendar
     ports:
-      - "8080:8080"
+      - "8888:8888"
     networks:
       - calendar_network
 

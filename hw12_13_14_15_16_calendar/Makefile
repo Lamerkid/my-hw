@@ -103,11 +103,11 @@ run-sender-img: build-sender-img
 
 docker-build: build-calendar-img build-scheduler-img build-sender-img
 
-docker-run: docker-build
-	@echo "Starting all services in containers..."
-	docker run -d --name calendar $(DOCKER_IMG_CALENDAR) &
-	docker run -d --name scheduler $(DOCKER_IMG_SCHEDULER) &
-	docker run -d --name sender $(DOCKER_IMG_SENDER) &
+up:
+	docker-compose -f deployments/docker-compose.yaml up --build -d
+
+down:
+	docker-compose -f deployments/docker-compose.yaml down -v
 
 version: build
 	$(BIN) version
@@ -121,5 +121,5 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run ./...
 
-.PHONY: generate lint test version build run docker-build docker-run
+.PHONY: generate lint test version build run docker-build docker-run up down
 
