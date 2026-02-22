@@ -3,9 +3,5 @@ sender:
     level: "DEBUG"
 
   amqp:
-    url: "amqp://guest:guest@localhost:5672"
+    url: "amqp://admin:admin@rabbitmq:5672"
     topic: "notifications"
-
-  storage:
-    type: "inMemory"
-    dsn: "postgres://myuser:mypass@localhost:5432/mydb?sslmode=verify-full"

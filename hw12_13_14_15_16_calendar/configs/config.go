@@ -9,9 +9,9 @@ import (
 )
 
 type Config struct {
-	Calendar  CalendarConfig  `yaml:"calendar"`
-	Scheduler SchedulerConfig `yaml:"scheduler"`
-	Sender    SenderConfig    `yaml:"sender"`
+	Calendar  *CalendarConfig  `yaml:"calendar,omitempty"`
+	Scheduler *SchedulerConfig `yaml:"scheduler,omitempty"`
+	Sender    *SenderConfig    `yaml:"sender,omitempty"`
 }
 
 type CalendarConfig struct {
@@ -28,9 +28,8 @@ type SchedulerConfig struct {
 }
 
 type SenderConfig struct {
-	AMQP    AMQPConf    `yaml:"amqp"`
-	Logger  LoggerConf  `yaml:"logger"`
-	Storage StorageConf `yaml:"storage"`
+	AMQP   AMQPConf   `yaml:"amqp"`
+	Logger LoggerConf `yaml:"logger"`
 }
 
 type ServerConf struct {

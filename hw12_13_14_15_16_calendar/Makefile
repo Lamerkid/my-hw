@@ -1,11 +1,15 @@
 BIN_CALENDAR := "./bin/calendar"
 BIN_SCHEDULER := "./bin/scheduler"
 BIN_SENDER := "./bin/sender"
+
 CALENDAR_CONFIG := "./configs/calendar_config.yaml"
 SCHEDULER_CONFIG := "./configs/scheduler_config.yaml"
 SENDER_CONFIG := "./configs/sender_config.yaml"
-DOCKER_IMG="calendar:develop"
 
+DOCKER_IMG_CALENDAR="calendar:develop"
+DOCKER_IMG_SCHEDULER="scheduler:develop"
+DOCKER_IMG_SENDER="sender:develop"
+ 
 GIT_HASH := $(shell git log --format="%h" -n 1)
 LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
 
@@ -69,16 +73,41 @@ run:
 	$(BIN_CALENDAR) --config $(CALENDAR_CONFIG) &
 	$(BIN_SCHEDULER) --config $(SCHEDULER_CONFIG) &
 	$(BIN_SENDER) --config $(SENDER_CONFIG) &
-	@echo "All services started in background. PID: $$!"
 
-build-img:
+build-calendar-img:
 	docker build \
 		--build-arg=LDFLAGS="$(LDFLAGS)" \
-		-t $(DOCKER_IMG) \
-		-f build/Dockerfile .
+		-t $(DOCKER_IMG_CALENDAR) \
+		-f build/Dockerfile.calendar .
 
-run-img: build-img
-	docker run $(DOCKER_IMG)
+build-scheduler-img:
+	docker build \
+		--build-arg=LDFLAGS="$(LDFLAGS)" \
+		-t $(DOCKER_IMG_SCHEDULER) \
+		-f build/Dockerfile.scheduler .
+
+build-sender-img:
+	docker build \
+		--build-arg=LDFLAGS="$(LDFLAGS)" \
+		-t $(DOCKER_IMG_SENDER) \
+		-f build/Dockerfile.sender .
+
+run-calendar-img: build-calendar-img
+	docker run $(DOCKER_IMG_CALENDAR)
+
+run-scheduler-img: build-scheduler-img
+	docker run $(DOCKER_IMG_SCHEDULER)
+
+run-sender-img: build-sender-img
+	docker run $(DOCKER_IMG_SENDER)
+
+docker-build: build-calendar-img build-scheduler-img build-sender-img
+
+docker-run: docker-build
+	@echo "Starting all services in containers..."
+	docker run -d --name calendar $(DOCKER_IMG_CALENDAR) &
+	docker run -d --name scheduler $(DOCKER_IMG_SCHEDULER) &
+	docker run -d --name sender $(DOCKER_IMG_SENDER) &
 
 version: build
 	$(BIN) version
@@ -92,4 +121,5 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run ./...
 
-.PHONY: generate build run build-img run-img version test lint
+.PHONY: generate lint test version build run docker-build docker-run
+

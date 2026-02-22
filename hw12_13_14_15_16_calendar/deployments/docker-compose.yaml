@@ -1,1 +1,105 @@
-version: "3"
+services:
+  postgres:
+    container_name: "postgres"
+    image: "postgres:18.2"
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: calendar_user
+      POSTGRES_PASSWORD: calendar
+      POSTGRES_DB: calendar
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calendar_user -d calendar"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - calendar_network
+
+  goose:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    container_name: "goose"
+    build:
+      context: ..
+      dockerfile: build/Dockerfile.goose
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_MIGRATION_DIR: /migrations
+      GOOSE_DBSTRING: "postgres://calendar_user:calendar@postgres:5432/calendar?sslmode=disable"
+    command: ["up"]
+    networks:
+      - calendar_network
+
+  rabbitmq:
+    container_name: "rabbitmq"
+    image: "rabbitmq:4.2-management"
+    restart: always
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - calendar_network
+
+  calendar:
+    depends_on:
+      goose:
+        condition: service_completed_successfully
+    container_name: "calendar"
+    restart: always
+    build:
+      context: ..
+      dockerfile: build/Dockerfile.calendar
+    ports:
+      - "8080:8080"
+    networks:
+      - calendar_network
+
+  scheduler:
+    depends_on:
+      goose:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    container_name: "scheduler"
+    restart: always
+    build:
+      context: ..
+      dockerfile: build/Dockerfile.scheduler
+    networks:
+      - calendar_network
+
+  sender:
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    container_name: "sender"
+    restart: always
+    build:
+      context: ..
+      dockerfile: build/Dockerfile.sender
+    networks:
+      - calendar_network
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+
+networks:
+  calendar_network:
+    name: calendar_network
+    driver: bridge

@@ -34,7 +34,7 @@ func (s *Storage) Close() error {
 
 func (s *Storage) Write(ctx context.Context, event domain.Event) error {
 	query := `INSERT INTO events(id, title, description, start_time, end_time, user_id, notify_before, notified) 
-	values($1, $2, $3, $4, $5, $6, $7, $8)`
+	values($1, $2, $3, $4, $5, $6, $7::interval, $8)`
 
 	_, err := s.db.ExecContext(ctx,
 		query,
@@ -56,7 +56,7 @@ func (s *Storage) Write(ctx context.Context, event domain.Event) error {
 func (s *Storage) Update(ctx context.Context, event domain.Event) error {
 	query := `UPDATE events
 	SET (title, description, start_time, end_time, user_id, notify_before, notified)
-	values($2, $3, $4, $5, $6, $7, $8)
+	values($2, $3, $4, $5, $6, $7::interval, $8)
 	WHERE events.id = $1`
 
 	_, err := s.db.ExecContext(ctx,

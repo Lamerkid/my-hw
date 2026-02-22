@@ -3,11 +3,11 @@ scheduler:
     level: "DEBUG"
 
   amqp:
-    url: "amqp://guest:guest@localhost:5672"
+    url: "amqp://admin:admin@rabbitmq:5672"
     topic: "notifications"
 
   storage:
-    type: "inMemory"
-    dsn: "postgres://myuser:mypass@localhost:5432/mydb?sslmode=verify-full"
+    type: "postgres"
+    dsn: "postgres://calendar_user:calendar@postgres:5432/calendar?sslmode=disable"
 
-  interval: "15m"
+  interval: "10s"
