@@ -16,6 +16,7 @@ func NewSender(logger Logger, consumer rmq.Consumer) *Sender {
 	return &Sender{
 		consumer: consumer,
 		logger:   logger,
+		handler:  NewMessageHandler(logger),
 	}
 }
 

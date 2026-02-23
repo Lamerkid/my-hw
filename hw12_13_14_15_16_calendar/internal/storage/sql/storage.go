@@ -34,7 +34,7 @@ func (s *Storage) Close() error {
 
 func (s *Storage) Write(ctx context.Context, event domain.Event) error {
 	query := `INSERT INTO events(id, title, description, start_time, end_time, user_id, notify_before, notified) 
-	values($1, $2, $3, $4, $5, $6, $7::interval, $8)`
+	values($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	_, err := s.db.ExecContext(ctx,
 		query,
@@ -56,7 +56,7 @@ func (s *Storage) Write(ctx context.Context, event domain.Event) error {
 func (s *Storage) Update(ctx context.Context, event domain.Event) error {
 	query := `UPDATE events
 	SET (title, description, start_time, end_time, user_id, notify_before, notified)
-	values($2, $3, $4, $5, $6, $7::interval, $8)
+	values($2, $3, $4, $5, $6, $7, $8)
 	WHERE events.id = $1`
 
 	_, err := s.db.ExecContext(ctx,
@@ -89,7 +89,7 @@ func (s *Storage) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 func (s *Storage) GetEvent(ctx context.Context, id uuid.UUID) (domain.Event, error) {
-	query := `SELECT id, title, description, start_time, end_time, user_id, notify_before
+	query := `SELECT id, title, description, start_time, end_time, user_id, notify_before, notified
 	FROM events
 	WHERE events.id = $1`
 
@@ -107,7 +107,8 @@ func (s *Storage) GetEvent(ctx context.Context, id uuid.UUID) (domain.Event, err
 		&event.StartTime,
 		&event.EndTime,
 		&event.UserID,
-		&event.NotifyBefore)
+		&event.NotifyBefore,
+		&event.Notified)
 	if err != nil {
 		return domain.Event{}, err
 	}
@@ -122,7 +123,7 @@ func (s *Storage) GetEvent(ctx context.Context, id uuid.UUID) (domain.Event, err
 func (s *Storage) EventsByDay(ctx context.Context, date string) ([]domain.Event, error) {
 	var events []domain.Event
 
-	query := `SELECT id, title, description, start_time, end_time, user_id, notify_before
+	query := `SELECT id, title, description, start_time, end_time, user_id, notify_before, notified
 	FROM events
 	WHERE start_time::date = $1`
 
@@ -140,7 +141,8 @@ func (s *Storage) EventsByDay(ctx context.Context, date string) ([]domain.Event,
 			&event.StartTime,
 			&event.EndTime,
 			&event.UserID,
-			&event.NotifyBefore)
+			&event.NotifyBefore,
+			&event.Notified)
 		if err != nil {
 			return nil, err
 		}
@@ -158,7 +160,7 @@ func (s *Storage) EventsByDay(ctx context.Context, date string) ([]domain.Event,
 func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]domain.Event, error) {
 	var events []domain.Event
 
-	query := `SELECT id, title, description, start_time, end_time, user_id, notify_before
+	query := `SELECT id, title, description, start_time, end_time, user_id, notify_before, notified
 	FROM events
 	WHERE start_time BETWEEN $1::date AND $1::date + interval '7 day'`
 
@@ -176,7 +178,8 @@ func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]domain.Event
 			&event.StartTime,
 			&event.EndTime,
 			&event.UserID,
-			&event.NotifyBefore)
+			&event.NotifyBefore,
+			&event.Notified)
 		if err != nil {
 			return nil, err
 		}
@@ -194,7 +197,7 @@ func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]domain.Event
 func (s *Storage) EventsByMonth(ctx context.Context, date string) ([]domain.Event, error) {
 	var events []domain.Event
 
-	query := `SELECT id, title, description, start_time, end_time, user_id, notify_before
+	query := `SELECT id, title, description, start_time, end_time, user_id, notify_before, notified
 	FROM events
 	WHERE start_time BETWEEN $1::date AND $1::date + interval '1 month'`
 
@@ -212,7 +215,8 @@ func (s *Storage) EventsByMonth(ctx context.Context, date string) ([]domain.Even
 			&event.StartTime,
 			&event.EndTime,
 			&event.UserID,
-			&event.NotifyBefore)
+			&event.NotifyBefore,
+			&event.Notified)
 		if err != nil {
 			return nil, err
 		}
@@ -234,7 +238,7 @@ func (s *Storage) EventsForNotification(ctx context.Context) ([]domain.Event, er
 	query := `SELECT id, title, description, start_time, end_time, user_id, notify_before, notified
 	FROM events
 	WHERE start_time > $1
-	AND start_time - notify_before <= $1
+	AND start_time - (notify_before / 1000 * interval '1 microsecond') <= $1
 	AND notified IS FALSE`
 
 	rows, err := s.db.QueryContext(ctx, query, now)
@@ -251,7 +255,8 @@ func (s *Storage) EventsForNotification(ctx context.Context) ([]domain.Event, er
 			&event.StartTime,
 			&event.EndTime,
 			&event.UserID,
-			&event.NotifyBefore)
+			&event.NotifyBefore,
+			&event.Notified)
 		if err != nil {
 			return nil, err
 		}
@@ -269,7 +274,7 @@ func (s *Storage) EventsForNotification(ctx context.Context) ([]domain.Event, er
 func (s *Storage) MarkNotified(ctx context.Context, id uuid.UUID) error {
 	query := `UPDATE events
 	SET notified = true
-	WHERE event.id = $1`
+	WHERE events.id = $1`
 
 	_, err := s.db.ExecContext(ctx, query, id)
 	if err != nil {

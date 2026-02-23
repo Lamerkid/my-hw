@@ -107,7 +107,16 @@ up:
 	docker-compose -f deployments/docker-compose.yaml up --build -d
 
 down:
-	docker-compose -f deployments/docker-compose.yaml down -v
+	docker-compose -f deployments/docker-compose.yaml down -v --remove-orphans
+
+integration-tests:
+	@echo "Starting services..."
+	@docker-compose -f test/integration/docker-compose.yaml up -d --build postgres rabbitmq goose calendar scheduler sender
+	@echo "Running integration tests..."
+	@docker-compose -f test/integration/docker-compose.yaml up --build --abort-on-container-exit test; \
+		EXIT_CODE=$$?; \
+	docker-compose -f test/integration/docker-compose.yaml down -v --remove-orphans; \
+	exit $$EXIT_CODE
 
 version: build
 	$(BIN) version

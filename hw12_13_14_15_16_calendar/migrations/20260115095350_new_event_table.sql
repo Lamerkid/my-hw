@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS events (
     start_time    TIMESTAMP,
     end_time      TIMESTAMP,
     user_id       UUID,
-    notify_before INTERVAL,
+    notify_before BIGINT,
     notified      BOOL
 );
 -- +goose StatementEnd
