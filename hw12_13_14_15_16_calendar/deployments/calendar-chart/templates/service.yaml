@@ -1,0 +1,18 @@
+{{- range $app := .Values.app }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $app.name }}
+spec:
+  selector:
+    app: {{ $app.name }}
+  ports:
+    - protocol: TCP
+      port: {{ $app.port }}
+      targetPort: {{ $app.targetPort }}
+      {{- if eq $app.name "calendar"}}
+      name: http
+      {{- end }}
+  type: ClusterIP
+{{- end }}
