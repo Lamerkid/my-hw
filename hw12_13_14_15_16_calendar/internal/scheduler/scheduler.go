@@ -24,7 +24,7 @@ func NewScheduler(logg Logger, producer rmq.Producer, storage Storage, interval 
 }
 
 func (s *Scheduler) Start(ctx context.Context) error {
-	s.logger.Info("startin scheduler...")
+	s.logger.Info("starting scheduler...")
 
 	schedInteval, err := time.ParseDuration(s.interval)
 	if err != nil {

@@ -12,7 +12,6 @@ import (
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/logger"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/rmq"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/sender"
-	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage"
 )
 
 var configFile string
@@ -42,14 +41,11 @@ func run() (exitCode int) {
 
 	rabbit := rmq.NewAMQP(logg,
 		config.Sender.AMQP.URL, config.Sender.AMQP.Topic)
-
-	storage, err := storage.NewStorage(ctx, config.Sender.Storage.Type,
-		config.Sender.Storage.DSN)
-	if err != nil {
-		logg.Error("failed to create storage: %v", err)
+	if err := rabbit.Connect(); err != nil {
+		logg.Error("failed to connect to rabbitmq: %v", err)
 		return 2
 	}
-	defer storage.Close()
+	defer rabbit.Close()
 
 	sender := sender.NewSender(logg, rabbit)
 

@@ -4,10 +4,10 @@ calendar:
 
   server:
     type: "http"
-    host: "127.0.0.1"
-    port: "8080"
+    host: "0.0.0.0"
+    port: "8888"
     timeOut: 30
 
   storage:
-    type: "inMemory"
-    dsn: "postgres://myuser:mypass@localhost:5432/mydb?sslmode=verify-full"
+    type: "postgres"
+    dsn: "postgres://calendar_user:calendar@postgres:5432/calendar?sslmode=disable"

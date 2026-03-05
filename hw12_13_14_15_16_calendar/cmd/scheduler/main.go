@@ -42,12 +42,17 @@ func run() (exitCode int) {
 
 	rabbit := rmq.NewAMQP(logg,
 		config.Scheduler.AMQP.URL, config.Scheduler.AMQP.Topic)
+	if err := rabbit.Connect(); err != nil {
+		logg.Error("failed to connect to rabbitmq: %v", err)
+		return 2
+	}
+	defer rabbit.Close()
 
 	storage, err := storage.NewStorage(ctx, config.Scheduler.Storage.Type,
 		config.Scheduler.Storage.DSN)
 	if err != nil {
 		logg.Error("failed to create storage: %v", err)
-		return 2
+		return 3
 	}
 	defer storage.Close()
 
@@ -58,7 +63,7 @@ func run() (exitCode int) {
 	if err != nil {
 		logg.Error("failed to start scheduler: %v", err)
 		cancel()
-		return 3
+		return 4
 	}
 
 	logg.Info("scheduler has stopped running...")

@@ -1,0 +1,78 @@
+registry: docker.io/library
+
+configs:
+  calendar:
+    logLevel: DEBUG
+    server:
+      type: http
+      host: 0.0.0.0
+      port: 8888
+      timeOut: 30
+  scheduler:
+    logLevel: DEBUG
+    interval: 10s
+  sender:
+    logLevel: DEBUG
+  postgres:
+    user: calendar_user
+    password: calendar
+    host: postgres
+    database: calendar
+  rabbitmq:
+    user: admin
+    password: admin
+    host: rabbitmq
+    topic: notifications
+
+migrations:
+  image: deployments-goose:latest
+  driver: postgres
+  dir: /migrations
+  dbstring: "postgres://calendar_user:calendar@postgres:5432/calendar?sslmode=disable"
+
+app:
+  - name: calendar
+    port: 8888
+    targetPort: 8888
+    replicas: 2
+    image: deployments-calendar:latest
+    config:
+      mountPath: /etc/calendar/calendar_config.yaml
+      subPath: calendar_config.yaml
+
+  - name: scheduler
+    port: 80
+    targetPort: 80
+    replicas: 1
+    image: deployments-scheduler:latest
+    config:
+      mountPath: /etc/calendar/scheduler_config.yaml
+      subPath: scheduler_config.yaml
+
+  - name: sender
+    port: 80
+    targetPort: 80
+    replicas: 1
+    image: deployments-sender:latest
+    config:
+      mountPath: /etc/calendar/sender_config.yaml
+      subPath: sender_config.yaml
+
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+    replicas: 1
+    image: postgres:18.2
+    env:
+      POSTGRES_USER: calendar_user
+      POSTGRES_PASSWORD: calendar
+      POSTGRES_DB: calendar
+
+  - name: rabbitmq
+    port: 5672
+    targetPort: 5672
+    replicas: 1
+    image: rabbitmq:4.2-management
+    env:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
