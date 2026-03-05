@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sender-config
+data:
+  sender_config.yaml: |
+    sender:
+      logger:
+        level: {{ .Values.configs.sender.logLevel | default "DEBUG"}}
+      amqp:
+        url: "amqp://{{ .Values.configs.rabbitmq.user }}:{{ .Values.configs.rabbitmq.password }}@{{ .Values.configs.rabbitmq.host }}:5672"
+        topic: {{ .Values.configs.scheduler.topic | default "notifications" }}

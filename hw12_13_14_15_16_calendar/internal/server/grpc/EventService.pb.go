@@ -28,9 +28,10 @@ type Event struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	StartTime     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	EndTime       *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
-	UserId        string                 `protobuf:"bytes,6,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	StartTime     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=startTime,proto3" json:"startTime,omitempty"`
+	EndTime       *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=endTime,proto3" json:"endTime,omitempty"`
+	UserId        string                 `protobuf:"bytes,6,opt,name=userId,proto3" json:"userId,omitempty"`
+	NotifyBefore  string                 `protobuf:"bytes,7,opt,name=notifyBefore,proto3" json:"notifyBefore,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -107,13 +108,21 @@ func (x *Event) GetUserId() string {
 	return ""
 }
 
+func (x *Event) GetNotifyBefore() string {
+	if x != nil {
+		return x.NotifyBefore
+	}
+	return ""
+}
+
 type CreateEventRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	StartTime     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	EndTime       *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
-	UserId        string                 `protobuf:"bytes,5,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	StartTime     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=startTime,proto3" json:"startTime,omitempty"`
+	EndTime       *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=endTime,proto3" json:"endTime,omitempty"`
+	UserId        string                 `protobuf:"bytes,5,opt,name=userId,proto3" json:"userId,omitempty"`
+	NotifyBefore  string                 `protobuf:"bytes,6,opt,name=notifyBefore,proto3" json:"notifyBefore,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -183,13 +192,21 @@ func (x *CreateEventRequest) GetUserId() string {
 	return ""
 }
 
+func (x *CreateEventRequest) GetNotifyBefore() string {
+	if x != nil {
+		return x.NotifyBefore
+	}
+	return ""
+}
+
 type UpdateEventRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	StartTime     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	EndTime       *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	StartTime     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=startTime,proto3" json:"startTime,omitempty"`
+	EndTime       *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=endTime,proto3" json:"endTime,omitempty"`
+	NotifyBefore  string                 `protobuf:"bytes,6,opt,name=notifyBefore,proto3" json:"notifyBefore,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -257,6 +274,13 @@ func (x *UpdateEventRequest) GetEndTime() *timestamppb.Timestamp {
 		return x.EndTime
 	}
 	return nil
+}
+
+func (x *UpdateEventRequest) GetNotifyBefore() string {
+	if x != nil {
+		return x.NotifyBefore
+	}
+	return ""
 }
 
 type EventIdRequest struct {
@@ -439,29 +463,29 @@ var File_api_EventService_proto protoreflect.FileDescriptor
 
 const file_api_EventService_proto_rawDesc = "" +
 	"\n" +
-	"\x16api/EventService.proto\x12\x05event\x1a\x1fgoogle/protobuf/timestamp.proto\"\xda\x01\n" +
+	"\x16api/EventService.proto\x12\x05event\x1a\x1fgoogle/protobuf/timestamp.proto\"\xfb\x01\n" +
 	"\x05Event\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\x129\n" +
-	"\n" +
-	"start_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
-	"\bend_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x12\x17\n" +
-	"\auser_id\x18\x06 \x01(\tR\x06userId\"\xd7\x01\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x128\n" +
+	"\tstartTime\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x124\n" +
+	"\aendTime\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x12\x16\n" +
+	"\x06userId\x18\x06 \x01(\tR\x06userId\x12\"\n" +
+	"\fnotifyBefore\x18\a \x01(\tR\fnotifyBefore\"\xf8\x01\n" +
 	"\x12CreateEventRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
-	"\vdescription\x18\x02 \x01(\tR\vdescription\x129\n" +
-	"\n" +
-	"start_time\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
-	"\bend_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x12\x17\n" +
-	"\auser_id\x18\x05 \x01(\tR\x06userId\"\xce\x01\n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x128\n" +
+	"\tstartTime\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x124\n" +
+	"\aendTime\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x12\x16\n" +
+	"\x06userId\x18\x05 \x01(\tR\x06userId\x12\"\n" +
+	"\fnotifyBefore\x18\x06 \x01(\tR\fnotifyBefore\"\xf0\x01\n" +
 	"\x12UpdateEventRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\x129\n" +
-	"\n" +
-	"start_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
-	"\bend_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\" \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x128\n" +
+	"\tstartTime\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x124\n" +
+	"\aendTime\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x12\"\n" +
+	"\fnotifyBefore\x18\x06 \x01(\tR\fnotifyBefore\" \n" +
 	"\x0eEventIdRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"D\n" +
 	"\x12SelectEventRequest\x12.\n" +
@@ -504,12 +528,12 @@ var (
 	}
 )
 var file_api_EventService_proto_depIdxs = []int32{
-	7,  // 0: event.Event.start_time:type_name -> google.protobuf.Timestamp
-	7,  // 1: event.Event.end_time:type_name -> google.protobuf.Timestamp
-	7,  // 2: event.CreateEventRequest.start_time:type_name -> google.protobuf.Timestamp
-	7,  // 3: event.CreateEventRequest.end_time:type_name -> google.protobuf.Timestamp
-	7,  // 4: event.UpdateEventRequest.start_time:type_name -> google.protobuf.Timestamp
-	7,  // 5: event.UpdateEventRequest.end_time:type_name -> google.protobuf.Timestamp
+	7,  // 0: event.Event.startTime:type_name -> google.protobuf.Timestamp
+	7,  // 1: event.Event.endTime:type_name -> google.protobuf.Timestamp
+	7,  // 2: event.CreateEventRequest.startTime:type_name -> google.protobuf.Timestamp
+	7,  // 3: event.CreateEventRequest.endTime:type_name -> google.protobuf.Timestamp
+	7,  // 4: event.UpdateEventRequest.startTime:type_name -> google.protobuf.Timestamp
+	7,  // 5: event.UpdateEventRequest.endTime:type_name -> google.protobuf.Timestamp
 	7,  // 6: event.SelectEventRequest.date:type_name -> google.protobuf.Timestamp
 	0,  // 7: event.EventResponse.event:type_name -> event.Event
 	0,  // 8: event.ArrayEventResponse.events:type_name -> event.Event

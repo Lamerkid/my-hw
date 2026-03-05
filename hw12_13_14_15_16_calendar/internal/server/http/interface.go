@@ -12,28 +12,30 @@ type Logger interface {
 // DTO
 
 type CreateEventRequest struct {
-	Title       string    `json:"title"`
-	Description string    `json:"description,omitempty"`
-	StartTime   time.Time `json:"startTime"`
-	EndTime     time.Time `json:"endTime"`
-	UserID      string    `json:"userId"`
+	Title        string    `json:"title"`
+	Description  string    `json:"description,omitempty"`
+	StartTime    time.Time `json:"startTime"`
+	EndTime      time.Time `json:"endTime"`
+	UserID       string    `json:"userId"`
+	NotifyBefore string    `json:"notifyBefore"`
 }
 
 type UpdateEventRequest struct {
-	Title       string    `json:"title"`
-	Description string    `json:"description,omitempty"`
-	StartTime   time.Time `json:"startTime"`
-	EndTime     time.Time `json:"endTime"`
-	UserID      string    `json:"userId"`
+	Title        string    `json:"title"`
+	Description  string    `json:"description,omitempty"`
+	StartTime    time.Time `json:"startTime"`
+	EndTime      time.Time `json:"endTime"`
+	NotifyBefore string    `json:"notifyBefore"`
 }
 
 type EventResponse struct {
-	ID          string    `json:"id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description,omitempty"`
-	StartTime   time.Time `json:"startTime"`
-	EndTime     time.Time `json:"endTime"`
-	UserID      string    `json:"userId"`
+	ID           string    `json:"id"`
+	Title        string    `json:"title"`
+	Description  string    `json:"description,omitempty"`
+	StartTime    time.Time `json:"startTime"`
+	EndTime      time.Time `json:"endTime"`
+	UserID       string    `json:"userId"`
+	NotifyBefore string    `json:"notifyBefore"`
 }
 
 type EventsListResponse struct {

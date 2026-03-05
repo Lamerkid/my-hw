@@ -29,6 +29,7 @@ func (s *Storage) Close() error {
 func (s *Storage) Write(ctx context.Context, event domain.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -45,6 +46,7 @@ func (s *Storage) Write(ctx context.Context, event domain.Event) error {
 func (s *Storage) Update(ctx context.Context, event domain.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -61,6 +63,7 @@ func (s *Storage) Update(ctx context.Context, event domain.Event) error {
 func (s *Storage) Delete(ctx context.Context, id uuid.UUID) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -77,6 +80,7 @@ func (s *Storage) Delete(ctx context.Context, id uuid.UUID) error {
 func (s *Storage) GetEvent(ctx context.Context, id uuid.UUID) (domain.Event, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	select {
 	case <-ctx.Done():
 		return domain.Event{}, ctx.Err()
@@ -90,26 +94,30 @@ func (s *Storage) GetEvent(ctx context.Context, id uuid.UUID) (domain.Event, err
 }
 
 func (s *Storage) EventsByDay(ctx context.Context, date string) ([]domain.Event, error) {
-	return CollectEvents(ctx, s, date, 0, 1)
+	return collectEvents(ctx, s, date, 0, 1)
 }
 
 func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]domain.Event, error) {
-	return CollectEvents(ctx, s, date, 0, 7)
+	return collectEvents(ctx, s, date, 0, 7)
 }
 
 func (s *Storage) EventsByMonth(ctx context.Context, date string) ([]domain.Event, error) {
-	return CollectEvents(ctx, s, date, 1, 0)
+	return collectEvents(ctx, s, date, 1, 0)
 }
 
-func CollectEvents(ctx context.Context, s *Storage, date string, month, day int) ([]domain.Event, error) {
+func collectEvents(ctx context.Context, s *Storage, date string, month, day int) ([]domain.Event, error) {
 	var events []domain.Event
+
 	parsedDate, err := time.Parse(time.DateOnly, date)
 	if err != nil {
 		return nil, err
 	}
+
 	endDate := parsedDate.AddDate(0, month, day)
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+
 	for _, event := range s.data {
 		select {
 		case <-ctx.Done():
@@ -120,5 +128,48 @@ func CollectEvents(ctx context.Context, s *Storage, date string, month, day int)
 			}
 		}
 	}
+
 	return events, nil
+}
+
+func (s *Storage) EventsForNotification(ctx context.Context) ([]domain.Event, error) {
+	var events []domain.Event
+	now := time.Now()
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, event := range s.data {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			notificationTime := event.StartTime.Add(-event.NotifyBefore)
+
+			if !notificationTime.After(now) && now.Before(event.StartTime) && !event.Notified {
+				events = append(events, event)
+			}
+		}
+	}
+
+	return events, nil
+}
+
+func (s *Storage) MarkNotified(ctx context.Context, id uuid.UUID) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		event, exists := s.data[id]
+		if !exists {
+			return fmt.Errorf("entry is not present in storage")
+		}
+		event.Notified = true
+		s.data[id] = event
+	}
+
+	return nil
 }

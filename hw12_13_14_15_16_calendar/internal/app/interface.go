@@ -38,17 +38,19 @@ type EventService interface {
 }
 
 type CreateEventCommand struct {
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	StartTime   time.Time `json:"startTime"`
-	EndTime     time.Time `json:"endTime"`
-	UserID      uuid.UUID `json:"userId"`
+	Title        string    `json:"title"`
+	Description  string    `json:"description,omitempty"`
+	StartTime    time.Time `json:"startTime"`
+	EndTime      time.Time `json:"endTime"`
+	UserID       uuid.UUID `json:"userId"`
+	NotifyBefore string    `json:"notifyBefore"`
 }
 
 type UpdateEventCommand struct {
-	ID          uuid.UUID `json:"id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	StartTime   time.Time `json:"startTime"`
-	EndTime     time.Time `json:"endTime"`
+	ID           uuid.UUID `json:"id"`
+	Title        string    `json:"title"`
+	Description  string    `json:"description,omitempty"`
+	StartTime    time.Time `json:"startTime"`
+	EndTime      time.Time `json:"endTime"`
+	NotifyBefore string    `json:"notifyBefore"`
 }

@@ -1,0 +1,7 @@
+sender:
+  logger:
+    level: "DEBUG"
+
+  amqp:
+    url: "amqp://admin:admin@rabbitmq:5672"
+    topic: "notifications"

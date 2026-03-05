@@ -33,11 +33,12 @@ func (s *Service) CreateEvent(ctx context.Context, in *CreateEventRequest) (*Eve
 	}
 
 	cmd := app.CreateEventCommand{
-		Title:       in.GetTitle(),
-		Description: in.GetDescription(),
-		StartTime:   in.GetStartTime().AsTime(),
-		EndTime:     in.GetEndTime().AsTime(),
-		UserID:      parsedUserID,
+		Title:        in.GetTitle(),
+		Description:  in.GetDescription(),
+		StartTime:    in.GetStartTime().AsTime(),
+		EndTime:      in.GetEndTime().AsTime(),
+		UserID:       parsedUserID,
+		NotifyBefore: in.GetNotifyBefore(),
 	}
 
 	event, err := s.app.CreateEvent(ctx, cmd)
@@ -48,12 +49,13 @@ func (s *Service) CreateEvent(ctx context.Context, in *CreateEventRequest) (*Eve
 
 	resp := &EventResponse{
 		Event: &Event{
-			Id:          event.ID.String(),
-			Title:       event.Title,
-			Description: event.Description,
-			StartTime:   timestamppb.New(event.StartTime),
-			EndTime:     timestamppb.New(event.EndTime),
-			UserId:      event.UserID.String(),
+			Id:           event.ID.String(),
+			Title:        event.Title,
+			Description:  event.Description,
+			StartTime:    timestamppb.New(event.StartTime),
+			EndTime:      timestamppb.New(event.EndTime),
+			UserId:       event.UserID.String(),
+			NotifyBefore: event.NotifyBefore.String(),
 		},
 	}
 
@@ -70,11 +72,12 @@ func (s *Service) UpdateEvent(ctx context.Context, in *UpdateEventRequest) (*Eve
 	}
 
 	cmd := app.UpdateEventCommand{
-		ID:          parsedID,
-		Title:       in.GetTitle(),
-		Description: in.GetDescription(),
-		StartTime:   in.GetStartTime().AsTime(),
-		EndTime:     in.GetEndTime().AsTime(),
+		ID:           parsedID,
+		Title:        in.GetTitle(),
+		Description:  in.GetDescription(),
+		StartTime:    in.GetStartTime().AsTime(),
+		EndTime:      in.GetEndTime().AsTime(),
+		NotifyBefore: in.GetNotifyBefore(),
 	}
 
 	event, err := s.app.UpdateEvent(ctx, cmd)
@@ -85,12 +88,13 @@ func (s *Service) UpdateEvent(ctx context.Context, in *UpdateEventRequest) (*Eve
 
 	resp := &EventResponse{
 		Event: &Event{
-			Id:          event.ID.String(),
-			Title:       event.Title,
-			Description: event.Description,
-			StartTime:   timestamppb.New(event.StartTime),
-			EndTime:     timestamppb.New(event.EndTime),
-			UserId:      event.UserID.String(),
+			Id:           event.ID.String(),
+			Title:        event.Title,
+			Description:  event.Description,
+			StartTime:    timestamppb.New(event.StartTime),
+			EndTime:      timestamppb.New(event.EndTime),
+			UserId:       event.UserID.String(),
+			NotifyBefore: event.NotifyBefore.String(),
 		},
 	}
 
@@ -114,12 +118,13 @@ func (s *Service) DeleteEvent(ctx context.Context, in *EventIdRequest) (*EventRe
 
 	resp := &EventResponse{
 		Event: &Event{
-			Id:          event.ID.String(),
-			Title:       event.Title,
-			Description: event.Description,
-			StartTime:   timestamppb.New(event.StartTime),
-			EndTime:     timestamppb.New(event.EndTime),
-			UserId:      event.UserID.String(),
+			Id:           event.ID.String(),
+			Title:        event.Title,
+			Description:  event.Description,
+			StartTime:    timestamppb.New(event.StartTime),
+			EndTime:      timestamppb.New(event.EndTime),
+			UserId:       event.UserID.String(),
+			NotifyBefore: event.NotifyBefore.String(),
 		},
 	}
 
