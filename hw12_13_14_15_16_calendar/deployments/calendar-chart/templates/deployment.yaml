@@ -1,0 +1,43 @@
+{{- range $app := .Values.app }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $app.name }}
+  labels:
+    app: {{ $app.name }}
+spec:
+  replicas: {{ $app.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $app.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $app.name }}
+    spec:
+      containers:
+      - name: {{ $app.name }}
+        image: {{ $.Values.registry }}/{{ $app.image }}
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - containerPort: {{ $app.targetPort }}
+        {{- if $app.env }}
+        env:
+        {{- range $key, $value := $app.env }}
+        - name: {{ $key }}
+          value: "{{ $value }}"
+        {{- end }}
+        {{- end }}
+        {{- if $app.config }}
+        volumeMounts:
+          - name: config
+            mountPath: {{ $app.config.mountPath }}
+            subPath: {{ $app.config.subPath }}
+            readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: {{ $app.name }}-config
+        {{- end }}
+{{- end }}
