@@ -1,0 +1,13 @@
+scheduler:
+  logger:
+    level: "DEBUG"
+
+  amqp:
+    url: "amqp://admin:admin@rabbitmq:5672"
+    topic: "notifications"
+
+  storage:
+    type: "postgres"
+    dsn: "postgres://calendar_user:calendar@postgres:5432/calendar?sslmode=disable"
+
+  interval: "10s"

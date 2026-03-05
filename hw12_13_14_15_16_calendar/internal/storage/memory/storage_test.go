@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage"
+	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 
-var event1 = storage.Event{
+var event1 = domain.Event{
 	ID:          uuid.New(),
 	Title:       "test1",
 	StartTime:   time.Date(2026, 1, 15, 0, 30, 0, 0, time.UTC),
@@ -21,7 +21,7 @@ var event1 = storage.Event{
 	UserID:      uuid.New(),
 }
 
-var event2 = storage.Event{
+var event2 = domain.Event{
 	ID:          uuid.New(),
 	Title:       "test2",
 	StartTime:   time.Date(2026, 1, 15, 0, 30, 0, 0, time.UTC).AddDate(0, 0, 5),
@@ -30,7 +30,7 @@ var event2 = storage.Event{
 	UserID:      uuid.New(),
 }
 
-var event3 = storage.Event{
+var event3 = domain.Event{
 	ID:          uuid.New(),
 	Title:       "test3",
 	StartTime:   time.Date(2026, 1, 15, 0, 30, 0, 0, time.UTC).AddDate(0, 0, 10),
@@ -39,7 +39,7 @@ var event3 = storage.Event{
 	UserID:      uuid.New(),
 }
 
-var event4 = storage.Event{
+var event4 = domain.Event{
 	ID:          uuid.New(),
 	Title:       "test4",
 	StartTime:   time.Date(2026, 1, 15, 0, 30, 0, 0, time.UTC).AddDate(0, 1, 1),
@@ -83,21 +83,21 @@ func TestStorage(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, monthResult, 3)
 
-		err = storage.Delete(ctx, event1)
+		err = storage.Delete(ctx, event1.ID)
 		require.NoError(t, err)
 
-		err = storage.Delete(ctx, event2)
+		err = storage.Delete(ctx, event2.ID)
 		require.NoError(t, err)
 
-		err = storage.Delete(ctx, event3)
+		err = storage.Delete(ctx, event3.ID)
 		require.NoError(t, err)
 
-		err = storage.Delete(ctx, event4)
+		err = storage.Delete(ctx, event4.ID)
 		require.NoError(t, err)
 
 		require.Len(t, storage.data, 0)
 
-		err = storage.Delete(ctx, event3)
+		err = storage.Delete(ctx, event3.ID)
 		require.Error(t, err)
 	})
 }
@@ -114,7 +114,7 @@ func BenchmarkStorage(b *testing.B) {
 			for pb.Next() {
 				storage.Write(ctx, event1)
 				storage.Update(ctx, event1)
-				storage.Delete(ctx, event1)
+				storage.Delete(ctx, event1.ID)
 			}
 		})
 	})
@@ -136,7 +136,7 @@ func BenchmarkStorage(b *testing.B) {
 			for pb.Next() {
 				storage.Write(ctx, event1)
 				storage.EventsByDay(ctx, "2026-01-15")
-				storage.Delete(ctx, event1)
+				storage.Delete(ctx, event1.ID)
 			}
 		})
 	})

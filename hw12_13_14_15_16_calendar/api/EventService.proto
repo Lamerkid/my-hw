@@ -1,7 +1,60 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 package event;
 
+option go_package = "./;internalgrpc";
+
+service EventService {
+    rpc CreateEvent (CreateEventRequest) returns (EventResponse);
+    rpc UpdateEvent (UpdateEventRequest) returns (EventResponse);
+    rpc DeleteEvent (EventIdRequest) returns (EventResponse);
+    rpc SelectEventByDay (SelectEventRequest) returns (ArrayEventResponse);
+    rpc SelectEventByWeek (SelectEventRequest) returns (ArrayEventResponse);
+    rpc SelectEventByMonth (SelectEventRequest) returns (ArrayEventResponse);
+}
+
 message Event {
-    // TODO
+    string id = 1;
+    string title = 2;
+    string description = 3;
+    google.protobuf.Timestamp startTime = 4;
+    google.protobuf.Timestamp endTime = 5;
+    string userId = 6;
+    string notifyBefore = 7;
+}
+
+message CreateEventRequest {
+    string title = 1;
+    string description = 2;
+    google.protobuf.Timestamp startTime = 3;
+    google.protobuf.Timestamp endTime = 4;
+    string userId = 5;
+    string notifyBefore = 6;
+}
+
+message UpdateEventRequest {
+    string id = 1;
+    string title = 2;
+    string description = 3;
+    google.protobuf.Timestamp startTime = 4;
+    google.protobuf.Timestamp endTime = 5;
+    string notifyBefore = 6;
+}
+
+message EventIdRequest {
+    string id = 1;
+}
+
+message SelectEventRequest {
+    google.protobuf.Timestamp date = 1;
+}
+
+message EventResponse {
+    Event event = 1;
+}
+
+message ArrayEventResponse {
+  repeated Event events = 1;
 }

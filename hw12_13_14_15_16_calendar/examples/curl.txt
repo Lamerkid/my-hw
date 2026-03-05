@@ -1,0 +1,28 @@
+curl -X POST -H "Content-Type:application/json" -d'
+{
+  "title": "celebration",
+  "description": "celebration of event",
+  "startTime": "2026-02-23T22:04:05Z",
+  "endTime": "2026-02-23T23:04:05Z",
+  "userId": "314a4a09-35d2-42b7-984d-6b5bf4cee123",
+  "notifyBefore": "10h"
+}
+' "http://127.0.0.1:8888/api/v3/event"
+
+curl "http://127.0.0.1:8888/api/v3/event/select?date=2006-01-02&range=day"
+
+{
+  "eventId": "314a4a09-35d2-42b7-984d-6b5bf4cee649",
+  "title": "celebration",
+  "description": "celebration of event",
+  "createdAt": "2006-01-02T15:04:05Z07:00"
+}
+
+grpcurl -plaintext -d '{
+  "title": "celebration",
+  "description": "celebration of event",
+  "startTime": "2006-01-02T15:04:05Z",
+  "endTime": "2006-02-02T15:04:05Z",
+  "userId": "314a4a09-35d2-42b7-984d-6b5bf4cee123",
+  "notifyBefore": "10m"
+}' 127.0.0.1:8080 event.EventService/CreateEvent

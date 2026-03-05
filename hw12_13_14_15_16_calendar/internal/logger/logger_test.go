@@ -2,7 +2,6 @@ package logger
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"testing"
 
@@ -12,7 +11,7 @@ import (
 func TestLogger(t *testing.T) {
 	var buf bytes.Buffer
 
-	logg := New("WARN")
+	logg := NewLogger("WARN")
 	logg.output = &buf
 
 	t.Run("logger levels", func(t *testing.T) {
@@ -29,13 +28,13 @@ func TestLogger(t *testing.T) {
 }
 
 func BenchmarkLogger(b *testing.B) {
-	logg := New("INFO")
+	logg := NewLogger("INFO")
 	logg.output = io.Discard
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			logg.Info(fmt.Sprintf("benchmark message Value: %d", b.N))
+			logg.Info("benchmark message Value: %d", b.N)
 		}
 	})
 }

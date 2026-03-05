@@ -1,12 +1,14 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS events (
-    id          UUID PRIMARY KEY,
-    title       VARCHAR (50),
-    start_time  TIMESTAMP,
-    end_time    TIMESTAMP,
-    description VARCHAR (255),
-    user_id     UUID
+    id            UUID PRIMARY KEY,
+    title         VARCHAR (50),
+    description   VARCHAR (255),
+    start_time    TIMESTAMP,
+    end_time      TIMESTAMP,
+    user_id       UUID,
+    notify_before BIGINT,
+    notified      BOOL
 );
 -- +goose StatementEnd
 

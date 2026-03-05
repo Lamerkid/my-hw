@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scheduler-config
+data:
+  scheduler_config.yaml: |
+    scheduler:
+      logger:
+        level: {{ .Values.configs.scheduler.logLevel | default "DEBUG" }}
+      amqp:
+        url: "amqp://{{ .Values.configs.rabbitmq.user }}:{{ .Values.configs.rabbitmq.password }}@{{ .Values.configs.rabbitmq.host }}:5672"
+        topic: {{ .Values.configs.scheduler.topic | default "notifications" }}
+      storage:
+        type: "postgres"
+        dsn: "postgres://{{ .Values.configs.postgres.user }}:{{ .Values.configs.postgres.password }}@{{ .Values.configs.postgres.host }}:5432/{{ .Values.configs.postgres.database }}?sslmode=disable"
+      interval: {{ .Values.configs.scheduler.interval | default "10s" }}

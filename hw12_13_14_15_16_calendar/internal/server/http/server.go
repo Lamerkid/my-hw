@@ -2,41 +2,34 @@ package internalhttp
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 	"time"
 )
 
 type Server struct {
-	app    Application
-	logger Logger
-	http   *http.Server
+	logger  Logger
+	handler *Handler
+	http    *http.Server
 }
 
-type Logger interface {
-	Debug(msg string)
-	Info(msg string)
-	Warn(msg string)
-	Error(msg string)
-}
-
-type Application interface {
-	CreateEvent(ctx context.Context) error
-}
-
-func NewServer(logger Logger, app Application) *Server {
+func NewServer(logger Logger, handler *Handler) *Server {
 	return &Server{
-		logger: logger,
-		app:    app,
+		logger:  logger,
+		handler: handler,
 	}
 }
 
-func (s *Server) Start(host, port string, timeout time.Duration) error {
+func (s *Server) Start(ctx context.Context, host, port string, timeout time.Duration) error {
 	url := net.JoinHostPort(host, port)
+
+	s.logger.Info("starting http server on %s", url)
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", s.Hello)
-	mux.HandleFunc("/hello", s.Hello)
+	mux.HandleFunc("/hello", s.handler.Hello)
+	mux.HandleFunc("/api/v3/event", s.handler.CreateEvent)
+	mux.HandleFunc("/api/v3/event/{id}", s.handler.EventHandler)
+	mux.HandleFunc("/api/v3/event/select", s.handler.SelectEventHandler)
 
 	handler := loggingMiddleware(mux)
 
@@ -46,19 +39,36 @@ func (s *Server) Start(host, port string, timeout time.Duration) error {
 		ReadHeaderTimeout: timeout,
 	}
 
-	return s.http.ListenAndServe()
+	serverErr := make(chan error, 1)
+
+	go func() {
+		if err := s.http.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			serverErr <- err
+		} else {
+			serverErr <- nil
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		s.logger.Info("stopping http server on %s", url)
+		return s.Stop(shutdownCtx)
+
+	case err := <-serverErr:
+		return err
+	}
 }
 
 func (s *Server) Stop(ctx context.Context) error {
-	s.logger.Info("Stopping server")
-	s.http.SetKeepAlivesEnabled(false)
-	if err := s.http.Shutdown(ctx); err != nil {
-		<-ctx.Done()
-		return err
+	if s.http != nil {
+		s.http.SetKeepAlivesEnabled(false)
+		if err := s.http.Shutdown(ctx); err != nil {
+			<-ctx.Done()
+			return err
+		}
 	}
 	return nil
-}
-
-func (s *Server) Hello(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello to %s\n", r.Host)
 }

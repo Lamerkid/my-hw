@@ -7,17 +7,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage"
+	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/domain"
 )
 
 type Storage struct {
-	data map[uuid.UUID]storage.Event
+	data map[uuid.UUID]domain.Event
 	mu   sync.RWMutex
 }
 
 func New() *Storage {
 	return &Storage{
-		data: make(map[uuid.UUID]storage.Event),
+		data: make(map[uuid.UUID]domain.Event),
 	}
 }
 
@@ -26,9 +26,10 @@ func (s *Storage) Close() error {
 	return nil
 }
 
-func (s *Storage) Write(ctx context.Context, event storage.Event) error {
+func (s *Storage) Write(ctx context.Context, event domain.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -42,9 +43,10 @@ func (s *Storage) Write(ctx context.Context, event storage.Event) error {
 	}
 }
 
-func (s *Storage) Update(ctx context.Context, event storage.Event) error {
+func (s *Storage) Update(ctx context.Context, event domain.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -58,43 +60,64 @@ func (s *Storage) Update(ctx context.Context, event storage.Event) error {
 	}
 }
 
-func (s *Storage) Delete(ctx context.Context, event storage.Event) error {
+func (s *Storage) Delete(ctx context.Context, id uuid.UUID) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
-		_, exists := s.data[event.ID]
+		_, exists := s.data[id]
 		if !exists {
 			return fmt.Errorf("entry is not present in storage")
 		}
-		delete(s.data, event.ID)
+		delete(s.data, id)
 		return nil
 	}
 }
 
-func (s *Storage) EventsByDay(ctx context.Context, date string) ([]storage.Event, error) {
-	return CollectEvents(ctx, s, date, 0, 1)
+func (s *Storage) GetEvent(ctx context.Context, id uuid.UUID) (domain.Event, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	select {
+	case <-ctx.Done():
+		return domain.Event{}, ctx.Err()
+	default:
+		event, exists := s.data[id]
+		if !exists {
+			return domain.Event{}, fmt.Errorf("entry is not present in storage")
+		}
+		return event, nil
+	}
 }
 
-func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]storage.Event, error) {
-	return CollectEvents(ctx, s, date, 0, 7)
+func (s *Storage) EventsByDay(ctx context.Context, date string) ([]domain.Event, error) {
+	return collectEvents(ctx, s, date, 0, 1)
 }
 
-func (s *Storage) EventsByMonth(ctx context.Context, date string) ([]storage.Event, error) {
-	return CollectEvents(ctx, s, date, 1, 0)
+func (s *Storage) EventsByWeek(ctx context.Context, date string) ([]domain.Event, error) {
+	return collectEvents(ctx, s, date, 0, 7)
 }
 
-func CollectEvents(ctx context.Context, s *Storage, date string, month, day int) ([]storage.Event, error) {
-	var events []storage.Event
+func (s *Storage) EventsByMonth(ctx context.Context, date string) ([]domain.Event, error) {
+	return collectEvents(ctx, s, date, 1, 0)
+}
+
+func collectEvents(ctx context.Context, s *Storage, date string, month, day int) ([]domain.Event, error) {
+	var events []domain.Event
+
 	parsedDate, err := time.Parse(time.DateOnly, date)
 	if err != nil {
 		return nil, err
 	}
+
 	endDate := parsedDate.AddDate(0, month, day)
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+
 	for _, event := range s.data {
 		select {
 		case <-ctx.Done():
@@ -105,5 +128,48 @@ func CollectEvents(ctx context.Context, s *Storage, date string, month, day int)
 			}
 		}
 	}
+
 	return events, nil
+}
+
+func (s *Storage) EventsForNotification(ctx context.Context) ([]domain.Event, error) {
+	var events []domain.Event
+	now := time.Now()
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, event := range s.data {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			notificationTime := event.StartTime.Add(-event.NotifyBefore)
+
+			if !notificationTime.After(now) && now.Before(event.StartTime) && !event.Notified {
+				events = append(events, event)
+			}
+		}
+	}
+
+	return events, nil
+}
+
+func (s *Storage) MarkNotified(ctx context.Context, id uuid.UUID) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		event, exists := s.data[id]
+		if !exists {
+			return fmt.Errorf("entry is not present in storage")
+		}
+		event.Notified = true
+		s.data[id] = event
+	}
+
+	return nil
 }

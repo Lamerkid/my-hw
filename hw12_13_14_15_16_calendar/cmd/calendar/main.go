@@ -2,82 +2,77 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
+	config "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/configs"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/memory"
-	sqlstorage "github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage/sql"
+	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/server"
+	"github.com/lamerkid/my-hw/hw12_13_14_15_calendar/internal/storage"
 )
 
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.yaml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "/etc/calendar/calendar_config.yaml", "Path to configuration file")
 }
 
 func main() {
+	os.Exit(run())
+}
+
+func run() (exitCode int) {
 	flag.Parse()
 
 	if flag.Arg(0) == "version" {
 		printVersion()
-		return
+		return 0
 	}
 
-	config := New()
-	if err := config.ReadConfig(configFile); err != nil {
-		fmt.Println("Error readin config file: ", err)
-		os.Exit(1)
-	}
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
-	logg := logger.New(config.Logger.Level)
+	config, err := config.LoadConfig(configFile)
+	if err != nil {
+		fmt.Println(err)
+		return 1
+	}
 
-	var storage app.Storage
+	logg := logger.NewLogger(config.Calendar.Logger.Level)
 
-	if config.Storage == "inMemory" {
-		storage = memorystorage.New()
-	} else if config.Storage == "Postgres" {
-		sqlStorage := sqlstorage.New()
-
-		if err := sqlStorage.Connect(ctx, config.DBConnetion); err != nil {
-			logg.Error("Failed to connect to SQL storage: " + err.Error())
-		}
-		storage = sqlStorage
+	storage, err := storage.NewStorage(ctx, config.Calendar.Storage.Type,
+		config.Calendar.Storage.DSN)
+	if err != nil {
+		logg.Error("failed to create storage: %v", err)
+		return 2
 	}
 	defer storage.Close()
 
-	calendar := app.New(logg, storage)
+	calendar := app.NewApp(logg, storage)
 
-	server := internalhttp.NewServer(logg, calendar)
-
-	go func() {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
-		}
-	}()
-
-	logg.Info("calendar is running...")
-
-	err := server.Start(config.Host, config.Port, config.Timeout)
-	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1) //nolint:gocritic
+	server, err := server.NewServer(logg, calendar, config.Calendar.Server.Type)
+	if err != nil {
+		logg.Error("failed to create server: %v", err)
+		return 3
 	}
+
+	logg.Info("calendar is starting...")
+
+	if err = server.Start(ctx,
+		config.Calendar.Server.Host,
+		config.Calendar.Server.Port,
+		config.Calendar.Server.Timeout,
+	); err != nil {
+		logg.Error("failed to start server: %v", err)
+		cancel()
+		return 4
+	}
+
+	logg.Info("calendar has stopped running...")
+	return 0
 }
