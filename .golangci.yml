@@ -17,12 +17,19 @@ linters-settings:
         allow:
           - $gostd
           - github.com/mailru/easyjson
+          - github.com/lamerkid/my-hw
+          - github.com/google/uuid
+          - github.com/jackc/pgx/v4/stdlib
+          - github.com/rabbitmq/amqp091-go
       Test:
         files:
           - $test
         allow:
           - $gostd
           - github.com/stretchr/testify
+          - github.com/lamerkid/my-hw
+          - github.com/google/uuid
+          - github.com/rabbitmq/amqp091-go
 issues:
   exclude-rules:
     - path: _test\.go
@@ -45,7 +52,6 @@ linters:
     - exhaustive
     - copyloopvar
     - funlen
-    - gci
     - gocognit
     - goconst
     - gocritic
